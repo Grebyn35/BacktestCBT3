@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Trade stats</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Favicon and Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/favicon/site.webmanifest">
+    <link rel="mask-icon" href="/favicon/safari-pinned-tab.svg" color="#6366f1">
+    <link rel="shortcut icon" href="/favicon/favicon.ico">
+    <meta name="msapplication-TileColor" content="#080032">
+    <meta name="msapplication-config" content="assets/favicon/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+
+    <!-- CSS -->
+    <link rel="stylesheet" media="screen" href="/vendor/boxicons/css/boxicons.min.css"/>
+    <link rel="stylesheet" media="screen" href="/style/theme.css">
+    <link rel="stylesheet" media="screen" href="/style/basic.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<header class="navbar navbar-expand-lg bg-light shadow-sm">
+
+</header>
+<input style="display: none" id="dataLong" type="text" th:value="${dataLong}">
+<input style="display: none" id="dataShort" type="text" th:value="${dataShort}">
+<input style="display: none" id="dateLong" type="text" th:value="${dateLong}">
+<input style="display: none" id="dateShort" type="text" th:value="${dateShort}">
+<section class="py-5">
+    <div class="row">
+        <div class="col-sm-6">
+            <canvas id="trade-stats-long"></canvas>
+        </div>
+        <div class="col-sm-6">
+            <canvas id="trade-stats-short"></canvas>
+        </div>
+    </div>
+</section>
+<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+<!-- Scripts -->
+<script src="/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/theme.min.js"></script>
+<script src="/js/main.js"></script>
+<script>
+    function returnArrayOfDataLong(){
+        let input = document.getElementById("dataLong").value;
+        let array = input.split(",");
+        return array;
+    }
+    function returnArrayOfDataShort(){
+        let input = document.getElementById("dataShort").value;
+        let array = input.split(",");
+        return array;
+    }
+    function returnArrayOfDateLong(){
+        let input = document.getElementById("dateLong").value;
+        let array = input.split(",");
+        return array;
+    }
+    function returnArrayOfDateShort(){
+        let input = document.getElementById("dateShort").value;
+        let array = input.split(",");
+        return array;
+    }
+    const ctxLong = document.getElementById('trade-stats-long');
+    const ctxShort = document.getElementById('trade-stats-short');
+
+    new Chart(ctxLong, {
+        type: 'line',
+        data: {
+            labels: returnArrayOfDateLong(),
+            datasets: [{
+                label: 'Long trades',
+                data: returnArrayOfDataLong(),
+                borderWidth: 1,
+                borderColor: '#36A2EB',
+                backgroundColor: '#9BD0F5',
+            }],
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false
+                },
+            }
+        }
+    });
+    new Chart(ctxShort, {
+        type: 'line',
+        data: {
+            labels: returnArrayOfDateShort(),
+            datasets: [{
+                label: 'Short trades',
+                data: returnArrayOfDataShort(),
+                borderWidth: 1,
+                borderColor: '#FF6384',
+                backgroundColor: '#FFB1C1',
+            }],
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false
+                },
+            }
+        }
+    });
+</script>
+</body>
+</html>
