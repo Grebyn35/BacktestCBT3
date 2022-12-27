@@ -25,5 +25,6 @@ public class FakeOrder implements Serializable {
     private double dollarQty = 1000;
     private String side;
     private String timeOpened;
+    private String timeClosed;
     private long candlestickId;
 }
