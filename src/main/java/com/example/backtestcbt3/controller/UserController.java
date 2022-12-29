@@ -33,8 +33,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 @Controller
@@ -187,6 +187,9 @@ public class UserController {
         double profits = 0;
         double wins = 0;
         double losses = 0;
+
+        double biggestWin = 1;
+        double biggestLoss = 1;
         ArrayList<FakeOrder> fakeOrders = staticFakeOrderRepository.findAllByExitPriceIsGreaterThan(0);
         for(int i = 0; i<fakeOrders.size();i++){
             //System.out.println(completedOrders.get(i).getPnl() + " = " + (profits + completedOrders.get(i).getPnl()) + " roi: " + completedOrders.get(i).getRoi());
@@ -198,11 +201,20 @@ public class UserController {
             else{
                 losses++;
             }
+            if(fakeOrders.get(i).getRoi()>biggestWin){
+                biggestWin = fakeOrders.get(i).getRoi();
+            }
+            else if(fakeOrders.get(i).getRoi()<biggestLoss){
+                biggestLoss = fakeOrders.get(i).getRoi();
+            }
         }
-        System.out.println("starting balance   : " + 1000);
-        System.out.println("profit             : " + profits);
+        System.out.println("time period        : " + fakeOrders.get(0).getTimeOpened() + " to " + fakeOrders.get(fakeOrders.size()-1).getTimeOpened());
+        System.out.println("starting balance   : " + "$" + 1000);
+        System.out.println("profit             : " + "$" + (int)profits);
         System.out.println("wins               : " + (wins));
         System.out.println("losses             : " + (losses));
+        System.out.println("biggest win        : " + (biggestWin));
+        System.out.println("biggest loss       : " + (biggestLoss));
         System.out.println("wirate             : " + (wins/(wins+losses))*100 + " %");
         System.out.println("ROI                : " + ((profits)/1000)*100 + " %");
         System.out.println("---");
@@ -215,7 +227,7 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(getDailyHigh(simulatedCandlesticks).getHigh());
         fakeOrder.setTakeProfit(calcTPShort(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()<(fakeOrder.getEntryPrice()*0.998)){
+        if(fakeOrder.getTakeProfit()<(fakeOrder.getEntryPrice()*0.998) && staticFakeOrderRepository.findAllBySideAndExitPrice("Sell", 0).size()==0){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
@@ -226,7 +238,7 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(getDailyLow(simulatedCandlesticks).getLow());
         fakeOrder.setTakeProfit(calcTPLong(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()>(fakeOrder.getEntryPrice()*1.002)){
+        if(fakeOrder.getTakeProfit()>(fakeOrder.getEntryPrice()*1.002) && staticFakeOrderRepository.findAllBySideAndExitPrice("Buy", 0).size()==0){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
@@ -251,7 +263,7 @@ public class UserController {
                 fakeShortOrders.get(i).setRoi(fakeShortOrders.get(i).getRoi() * 0.9998);
                 fakeShortOrders.get(i).setPnl(1000 * fakeShortOrders.get(i).getRoi());
                 fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl() - 1000);
-                fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl() * 25);
+                fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl() * 10);
                 fakeShortOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 System.out.println("short $$$ : roi: " + fakeShortOrders.get(i).getRoi() + " : pnl: " + fakeShortOrders.get(i).getPnl() + " : " + fakeShortOrders.get(i).getTimeOpened());
                 staticFakeOrderRepository.save(fakeShortOrders.get(i));
@@ -261,7 +273,7 @@ public class UserController {
                 fakeShortOrders.get(i).setRoi(fakeShortOrders.get(i).getRoi() * 0.9998);
                 fakeShortOrders.get(i).setPnl(1000 * fakeShortOrders.get(i).getRoi());
                 fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl() - 1000);
-                fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl() * 25);
+                fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl() * 10);
                 fakeShortOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 System.out.println("short loss : roi: " + fakeShortOrders.get(i).getRoi() + " : pnl: " + fakeShortOrders.get(i).getPnl() + " : " + fakeShortOrders.get(i).getTimeOpened());
                 staticFakeOrderRepository.save(fakeShortOrders.get(i));
@@ -277,7 +289,7 @@ public class UserController {
                 fakeLongOrders.get(i).setRoi(fakeLongOrders.get(i).getRoi()*0.9998);
                 fakeLongOrders.get(i).setPnl(1000*fakeLongOrders.get(i).getRoi());
                 fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl()-1000);
-                fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl() * 25);
+                fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl() * 10);
                 fakeLongOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 System.out.println("long $$$ : roi: " + fakeLongOrders.get(i).getRoi() + " : pnl: " + fakeLongOrders.get(i).getPnl() + " : " + fakeLongOrders.get(i).getTimeOpened());
                 staticFakeOrderRepository.save(fakeLongOrders.get(i));
@@ -288,7 +300,7 @@ public class UserController {
                 fakeLongOrders.get(i).setRoi(fakeLongOrders.get(i).getRoi()*0.9998);
                 fakeLongOrders.get(i).setPnl(1000*fakeLongOrders.get(i).getRoi());
                 fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl()-1000);
-                fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl() * 25);
+                fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl() * 10);
                 fakeLongOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 System.out.println("long loss : roi: " + fakeLongOrders.get(i).getRoi() + " : pnl: " + fakeLongOrders.get(i).getPnl() + " : " + fakeLongOrders.get(i).getTimeOpened());
                 staticFakeOrderRepository.save(fakeLongOrders.get(i));
