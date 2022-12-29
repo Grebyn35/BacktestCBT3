@@ -83,6 +83,7 @@ public class UserController {
         dateShort.add("2022-12-01-00:00");
         ArrayList<FakeOrder> fakeLongOrders = staticFakeOrderRepository.findAllBySideAndExitPriceIsGreaterThan("Buy", 0);
         ArrayList<FakeOrder> fakeShortOrders = staticFakeOrderRepository.findAllBySideAndExitPriceIsGreaterThan("Sell", 0);
+        ArrayList<Candlestick> candlesticks = staticCandlestickRepository.findAll();
         for(int i = 0; i<fakeLongOrders.size();i++){
             startingBalanceLong += fakeLongOrders.get(i).getPnl();
             dataLong.add(startingBalanceLong);
@@ -97,6 +98,31 @@ public class UserController {
         model.addAttribute("dataShort", dataShort.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("dateLong", dateLong.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("dateShort", dateShort.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
+        model.addAttribute("candlesticks", makeHigherTimeframeCandlestick(candlesticks, 20));
+    }
+    public ArrayList makeHigherTimeframeCandlestick(ArrayList<Candlestick> candlesticks, int size){
+        ArrayList<Candlestick> candlesticksHigher = new ArrayList<>();
+        int count = 0;
+        Candlestick candlestick = new Candlestick();
+        for(int i = 0; i<candlesticks.size();i++){
+            if(count==size){
+                candlesticksHigher.add(candlestick);
+                candlestick = null;
+                count = 0;
+                continue;
+            }
+            if(count==0){
+                candlestick = candlesticks.get(i);
+            }
+            else if(candlesticks.get(i).getHigh()>candlestick.getHigh()){
+                candlestick.setHigh(candlesticks.get(i).getHigh());
+            }
+            else if(candlesticks.get(i).getLow()<candlestick.getLow()){
+                candlestick.setLow(candlesticks.get(i).getLow());
+            }
+            count++;
+        }
+        return candlesticksHigher;
     }
     public void strategyTester(int stepBack, double takeProfit) throws InterruptedException, FileNotFoundException, ParseException {
 
@@ -121,6 +147,7 @@ public class UserController {
 
             //Check if the data is old enough to start working with. Ex 1440 on the minute chart equals 24 hours of data.
             if(simulatedCandlesticks.size()>stepBack-1/* && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()>1*/){
+                double volume = dailyHigh.getHigh() / dailyLow.getLow();
                 //If the algorithm is valid for short, a short will open based upon the function 'priceBounceBearish'
                 if(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()<dailyHigh.getClose()/* && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()<simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()*/){
                     if(isCurrentYoungerThan4Ticks(simulatedCandlesticks.get(simulatedCandlesticks.size()-1), dailyHigh, 5)){
@@ -139,6 +166,22 @@ public class UserController {
         }
         //Print the results. Static variables are being used to compare best previous iterations of params
         returnResults();
+    }
+    public boolean shortCloseValidation(ArrayList<Candlestick> candlesticks, Candlestick dailyHigh){
+        for (int i = candlesticks.size()-1; i >= 0; i--) {
+            if(candlesticks.get(i).getHigh()>dailyHigh.getHigh()){
+                return false;
+            }
+        }
+        return true;
+    }
+    public boolean longCloseValidation(ArrayList<Candlestick> candlesticks, Candlestick dailyLow){
+        for (int i = candlesticks.size()-1; i >= 0; i--) {
+            if(candlesticks.get(i).getLow()<dailyLow.getLow()){
+                return false;
+            }
+        }
+        return true;
     }
     public static void returnResults(){
         double profits = 0;
