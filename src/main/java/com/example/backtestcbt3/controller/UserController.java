@@ -209,12 +209,12 @@ public class UserController {
             }
         }
         System.out.println("time period        : " + fakeOrders.get(0).getTimeOpened() + " to " + fakeOrders.get(fakeOrders.size()-1).getTimeOpened());
-        System.out.println("starting balance   : " + "$" + 1000);
-        System.out.println("profit             : " + "$" + (int)profits);
+        System.out.println("starting balance   : " + 1000 + " $");
+        System.out.println("profit             : " + (int)profits + "$");
         System.out.println("wins               : " + (wins));
         System.out.println("losses             : " + (losses));
-        System.out.println("biggest win        : " + (biggestWin));
-        System.out.println("biggest loss       : " + (biggestLoss));
+        System.out.println("biggest win        : " + ((biggestWin)-1)*100 + " %");
+        System.out.println("biggest loss       : " + ((biggestLoss)-1)*100 + " %");
         System.out.println("wirate             : " + (wins/(wins+losses))*100 + " %");
         System.out.println("ROI                : " + ((profits)/1000)*100 + " %");
         System.out.println("---");
@@ -227,7 +227,7 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(getDailyHigh(simulatedCandlesticks).getHigh());
         fakeOrder.setTakeProfit(calcTPShort(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()<(fakeOrder.getEntryPrice()*0.998) && staticFakeOrderRepository.findAllBySideAndExitPrice("Sell", 0).size()==0){
+        if(fakeOrder.getTakeProfit()<(fakeOrder.getEntryPrice()*0.998)){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
@@ -238,7 +238,7 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(getDailyLow(simulatedCandlesticks).getLow());
         fakeOrder.setTakeProfit(calcTPLong(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()>(fakeOrder.getEntryPrice()*1.002) && staticFakeOrderRepository.findAllBySideAndExitPrice("Buy", 0).size()==0){
+        if(fakeOrder.getTakeProfit()>(fakeOrder.getEntryPrice()*1.002)){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
