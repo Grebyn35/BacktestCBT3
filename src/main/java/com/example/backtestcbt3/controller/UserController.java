@@ -70,12 +70,18 @@ public class UserController {
         return "visualiser";
     }
     public void visualiseDataModel(Model model){
+        ArrayList<Double> dataTotal = new ArrayList<>();
         ArrayList<Double> dataLong = new ArrayList<>();
         ArrayList<Double> dataShort = new ArrayList<>();
+        ArrayList<String> dateTotal = new ArrayList<>();
         ArrayList<String> dateLong = new ArrayList<>();
         ArrayList<String> dateShort = new ArrayList<>();
+        double startingBalanceTotal = 1000;
         double startingBalanceLong = 1000;
         double startingBalanceShort = 1000;
+        dataTotal.add(startingBalanceTotal);
+        dateTotal.add("2022-12-01-00:00");
+
         dataLong.add(startingBalanceLong);
         dateLong.add("2022-12-01-00:00");
 
@@ -83,6 +89,7 @@ public class UserController {
         dateShort.add("2022-12-01-00:00");
         ArrayList<FakeOrder> fakeLongOrders = staticFakeOrderRepository.findAllBySideAndExitPriceIsGreaterThan("Buy", 0);
         ArrayList<FakeOrder> fakeShortOrders = staticFakeOrderRepository.findAllBySideAndExitPriceIsGreaterThan("Sell", 0);
+        ArrayList<FakeOrder> fakeTotalOrders = staticFakeOrderRepository.findAllByExitPriceIsGreaterThan(0);
         ArrayList<Candlestick> candlesticks = staticCandlestickRepository.findAll();
         for(int i = 0; i<fakeLongOrders.size();i++){
             startingBalanceLong += fakeLongOrders.get(i).getPnl();
@@ -94,8 +101,16 @@ public class UserController {
             dataShort.add(startingBalanceShort);
             dateShort.add(fakeShortOrders.get(i).getTimeOpened());
         }
+
+        for(int i = 0; i<fakeTotalOrders.size();i++){
+            startingBalanceTotal += fakeTotalOrders.get(i).getPnl();
+            dataTotal.add(startingBalanceTotal);
+            dateTotal.add(fakeTotalOrders.get(i).getTimeOpened());
+        }
         model.addAttribute("dataLong", dataLong.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("dataShort", dataShort.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
+        model.addAttribute("dataTotal", dataTotal.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
+        model.addAttribute("dateTotal", dateTotal.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("dateLong", dateLong.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("dateShort", dateShort.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("candlesticks", makeHigherTimeframeCandlestick(candlesticks, 20));
@@ -130,8 +145,8 @@ public class UserController {
         Candlestick dailyHigh = null;
         Candlestick dailyLow = null;
 
-        double startingBalanceLong = 1000;
-        double startingBalancShort = 1000;
+        double startingBalanceLong = 50000;
+        double startingBalancShort = 50000;
 
         //Whole dataset
         ArrayList<Candlestick> candlesticks = staticCandlestickRepository.findAll();
@@ -152,14 +167,14 @@ public class UserController {
             if(simulatedCandlesticks.size()>stepBack-1){
                 double volume = dailyHigh.getHigh() / dailyLow.getLow();
                 //If the algorithm is valid for short, a short will open based upon the function 'priceBounceBearish'
-                if(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()<dailyHigh.getClose()/* && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()<simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()*/){
-                    if(isCurrentYoungerThan4Ticks(simulatedCandlesticks.get(simulatedCandlesticks.size()-1), dailyHigh, 5) && volume>1.012){
+                if(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()<dailyHigh.getClose() && volume>1.012/* && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()<simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()*/){
+                    if(isCurrentYoungerThan4Ticks(simulatedCandlesticks.get(simulatedCandlesticks.size()-1), dailyHigh, 5)){
                         createFakeShort(simulatedCandlesticks, takeProfit, atr(simulatedCandlesticks));
                     }
                 }
                 //If the algorithm is valid for long, a long will open based upon the function 'priceBounceBullish'
-                if(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()>dailyLow.getClose()/* && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()>simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()*/){
-                    if(isCurrentYoungerThan4Ticks(simulatedCandlesticks.get(simulatedCandlesticks.size()-1), dailyLow, 5) && volume>1.012){
+                if(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()>dailyLow.getClose() && volume>1.012/* && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()>simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()*/){
+                    if(isCurrentYoungerThan4Ticks(simulatedCandlesticks.get(simulatedCandlesticks.size()-1), dailyLow, 5)){
                         createFakeLong(simulatedCandlesticks, takeProfit, atr(simulatedCandlesticks));
                     }
                 }
@@ -235,7 +250,7 @@ public class UserController {
         }
         System.out.println("time period        : " + fakeOrders.get(0).getTimeOpened() + " to " + fakeOrders.get(fakeOrders.size()-1).getTimeOpened());
         System.out.println("starting balance   : " + 1000 + " $");
-        System.out.println("profit             : " + (int)profits + "$");
+        System.out.println("profit             : " + (int)profits + " $");
         System.out.println("wins               : " + (wins));
         System.out.println("losses             : " + (losses));
         System.out.println("biggest win        : " + ((biggestWin)-1)*100 + " %");
@@ -288,7 +303,6 @@ public class UserController {
                 fakeShortOrders.get(i).setRoi(fakeShortOrders.get(i).getRoi() * 0.9998);
                 fakeShortOrders.get(i).setPnl(startingBalance * fakeShortOrders.get(i).getRoi());
                 fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl() - startingBalance);
-                fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl() * 50);
                 fakeShortOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 startingBalance+=fakeShortOrders.get(i).getPnl();
                 System.out.println("short $$$ : roi: " + fakeShortOrders.get(i).getRoi() + " : pnl: " + fakeShortOrders.get(i).getPnl() + " : " + fakeShortOrders.get(i).getTimeOpened());
@@ -299,7 +313,6 @@ public class UserController {
                 fakeShortOrders.get(i).setRoi(fakeShortOrders.get(i).getRoi() * 0.9998);
                 fakeShortOrders.get(i).setPnl(startingBalance * fakeShortOrders.get(i).getRoi());
                 fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl() - startingBalance);
-                fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl() * 50);
                 fakeShortOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 startingBalance+=fakeShortOrders.get(i).getPnl();
                 System.out.println("short loss : roi: " + fakeShortOrders.get(i).getRoi() + " : pnl: " + fakeShortOrders.get(i).getPnl() + " : " + fakeShortOrders.get(i).getTimeOpened());
@@ -317,7 +330,6 @@ public class UserController {
                 fakeLongOrders.get(i).setRoi(fakeLongOrders.get(i).getRoi()*0.9998);
                 fakeLongOrders.get(i).setPnl(startingBalance*fakeLongOrders.get(i).getRoi());
                 fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl()-startingBalance);
-                fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl() * 50);
                 fakeLongOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 startingBalance+=fakeLongOrders.get(i).getPnl();
                 System.out.println("long $$$ : roi: " + fakeLongOrders.get(i).getRoi() + " : pnl: " + fakeLongOrders.get(i).getPnl() + " : " + fakeLongOrders.get(i).getTimeOpened());
@@ -329,7 +341,6 @@ public class UserController {
                 fakeLongOrders.get(i).setRoi(fakeLongOrders.get(i).getRoi()*0.9998);
                 fakeLongOrders.get(i).setPnl(startingBalance*fakeLongOrders.get(i).getRoi());
                 fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl()-startingBalance);
-                fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl() * 50);
                 fakeLongOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 startingBalance+=fakeLongOrders.get(i).getPnl();
                 System.out.println("long loss : roi: " + fakeLongOrders.get(i).getRoi() + " : pnl: " + fakeLongOrders.get(i).getPnl() + " : " + fakeLongOrders.get(i).getTimeOpened());

@@ -26,11 +26,16 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+<input style="display: none" id="dataTotal" type="text" th:value="${dataTotal}">
+<input style="display: none" id="dateTotal" type="text" th:value="${dateTotal}">
 <input style="display: none" id="dataLong" type="text" th:value="${dataLong}">
 <input style="display: none" id="dataShort" type="text" th:value="${dataShort}">
 <input style="display: none" id="dateLong" type="text" th:value="${dateLong}">
 <input style="display: none" id="dateShort" type="text" th:value="${dateShort}">
 <div class="container">
+    <div class="col-sm-12">
+        <canvas id="trade-stats-total"></canvas>
+    </div>
     <div class="col-sm-12">
         <canvas id="trade-stats-long"></canvas>
     </div>
@@ -89,6 +94,11 @@
     chartCandlestick.render();
 </script>
 <script>
+    function returnArrayOfDataTotal(){
+        let input = document.getElementById("dataTotal").value;
+        let array = input.split(",");
+        return array;
+    }
     function returnArrayOfDataLong(){
         let input = document.getElementById("dataLong").value;
         let array = input.split(",");
@@ -96,6 +106,11 @@
     }
     function returnArrayOfDataShort(){
         let input = document.getElementById("dataShort").value;
+        let array = input.split(",");
+        return array;
+    }
+    function returnArrayOfDateTotal(){
+        let input = document.getElementById("dateTotal").value;
         let array = input.split(",");
         return array;
     }
@@ -109,9 +124,30 @@
         let array = input.split(",");
         return array;
     }
+    const ctxTotal = document.getElementById('trade-stats-total');
     const ctxLong = document.getElementById('trade-stats-long');
     const ctxShort = document.getElementById('trade-stats-short');
 
+    new Chart(ctxTotal, {
+        type: 'line',
+        data: {
+            labels: returnArrayOfDateTotal(),
+            datasets: [{
+                label: 'Total trades',
+                data: returnArrayOfDataTotal(),
+                borderWidth: 1,
+                borderColor: '#36A2EB',
+                backgroundColor: '#9BD0F5',
+            }],
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false
+                },
+            }
+        }
+    });
     new Chart(ctxLong, {
         type: 'line',
         data: {
