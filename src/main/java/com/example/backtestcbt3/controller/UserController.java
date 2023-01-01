@@ -145,8 +145,8 @@ public class UserController {
         Candlestick dailyHigh = null;
         Candlestick dailyLow = null;
 
-        double startingBalanceLong = 50000;
-        double startingBalancShort = 50000;
+        double startingBalanceLong = 5000;
+        double startingBalancShort = 5000;
 
         //Whole dataset
         ArrayList<Candlestick> candlesticks = staticCandlestickRepository.findAll();
@@ -400,11 +400,30 @@ public class UserController {
         staticCandlestickRepository.deleteAll(staticCandlestickRepository.findAll());
         System.out.println("removed candlestick data");
     }
+    public static <T> ArrayList<T> removeDuplicates(ArrayList<T> list)
+    {
+
+        // Create a new ArrayList
+        ArrayList<T> newList = new ArrayList<T>();
+
+        // Traverse through the first list
+        for (T element : list) {
+
+            // If this element is not present in newList
+            // then add it
+            if (!newList.contains(element)) {
+
+                newList.add(element);
+            }
+        }
+
+        // return the new list
+        return newList;
+    }
     public void saveCandlesticksData()  {
         try{
             System.out.println("saving new candlestick data");
             Document doc = Jsoup.connect("https://cbt3.herokuapp.com/test-data")
-                    .timeout(100000)
                     .maxBodySize(0)
                     .ignoreContentType(true)
                     .get();
@@ -415,6 +434,7 @@ public class UserController {
                 Candlestick candlestick = g.fromJson(candlestickItem, Candlestick.class);
                 candlesticks.add(candlestick);
             }
+            candlesticks = removeDuplicates(candlesticks);
             staticCandlestickRepository.saveAll(candlesticks);
             System.out.println("saved new candlestick data; size: " + candlesticks.size());
         }catch (Exception e){
