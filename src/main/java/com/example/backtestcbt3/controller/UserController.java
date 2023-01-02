@@ -49,6 +49,8 @@ public class UserController {
     private static CandlestickRepository staticCandlestickRepository;
     private static UserRepository staticUserRepository;
     private static FakeOrderRepository staticFakeOrderRepository;
+    private static double startValue = 4531;
+    private static int leverage = 50;
 
     @GetMapping("/load-data")
     public String loadData(){
@@ -76,9 +78,9 @@ public class UserController {
         ArrayList<String> dateTotal = new ArrayList<>();
         ArrayList<String> dateLong = new ArrayList<>();
         ArrayList<String> dateShort = new ArrayList<>();
-        double startingBalanceTotal = 1000;
-        double startingBalanceLong = 1000;
-        double startingBalanceShort = 1000;
+        double startingBalanceTotal = startValue;
+        double startingBalanceLong = startValue;
+        double startingBalanceShort = startValue;
         dataTotal.add(startingBalanceTotal);
         dateTotal.add("2022-12-01-00:00");
 
@@ -145,18 +147,21 @@ public class UserController {
         Candlestick dailyHigh = null;
         Candlestick dailyLow = null;
 
-        double startingBalanceLong = 5000;
-        double startingBalancShort = 5000;
+        double startingBalanceLong = (startValue * leverage);
+        double startingBalancShort = (startValue * leverage);
 
         //Whole dataset
         ArrayList<Candlestick> candlesticks = staticCandlestickRepository.findAll();
         ArrayList<Candlestick> simulatedCandlesticks = new ArrayList<>();
+        ArrayList<Candlestick> dailySimulatedCandlesticks = new ArrayList<>();
         for(int i = 0; i<candlesticks.size();i++){
             //Adding a new candlestick like below simulates realtime data with a new opne, close low, high
             simulatedCandlesticks.add(candlesticks.get(i));
+            dailySimulatedCandlesticks.add(candlesticks.get(i));
 
             //Removes old values in the simulated data not being used for iteration efficiency
             simulatedCandlesticks = removeOverflow(simulatedCandlesticks, stepBack);
+            dailySimulatedCandlesticks = removeOverflow(dailySimulatedCandlesticks, 720);
 
             //Check if a long position is open
             startingBalanceLong = monitorLongPositions(simulatedCandlesticks.get(simulatedCandlesticks.size()-1), startingBalanceLong);
@@ -166,14 +171,21 @@ public class UserController {
             //Check if the data is old enough to start working with. Ex 1440 on the minute chart equals 24 hours of data.
             if(simulatedCandlesticks.size()>stepBack-1){
                 double volume = dailyHigh.getHigh() / dailyLow.getLow();
+                double dailyVolumeThreshold = getDailyHigh(simulatedCandlesticks).getHigh() / getDailyLow(simulatedCandlesticks).getLow();
+                if(dailyVolumeThreshold>1.01){
+                    dailyVolumeThreshold = 1.012;
+                }
+                else{
+                    dailyVolumeThreshold = 1.0075;
+                }
                 //If the algorithm is valid for short, a short will open based upon the function 'priceBounceBearish'
-                if(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()<dailyHigh.getClose() && volume>1.012/* && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()<simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()*/){
+                if(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()<dailyHigh.getClose() && volume>=dailyVolumeThreshold/* && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()<simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()*/){
                     if(isCurrentYoungerThan4Ticks(simulatedCandlesticks.get(simulatedCandlesticks.size()-1), dailyHigh, 5)){
                         createFakeShort(simulatedCandlesticks, takeProfit, atr(simulatedCandlesticks));
                     }
                 }
                 //If the algorithm is valid for long, a long will open based upon the function 'priceBounceBullish'
-                if(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()>dailyLow.getClose() && volume>1.012/* && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()>simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()*/){
+                if(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()>dailyLow.getClose() && volume>=dailyVolumeThreshold/* && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose()>simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()*/){
                     if(isCurrentYoungerThan4Ticks(simulatedCandlesticks.get(simulatedCandlesticks.size()-1), dailyLow, 5)){
                         createFakeLong(simulatedCandlesticks, takeProfit, atr(simulatedCandlesticks));
                     }
@@ -249,14 +261,14 @@ public class UserController {
             }
         }
         System.out.println("time period        : " + fakeOrders.get(0).getTimeOpened() + " to " + fakeOrders.get(fakeOrders.size()-1).getTimeOpened());
-        System.out.println("starting balance   : " + 1000 + " $");
+        System.out.println("starting balance   : " + startValue + " $");
         System.out.println("profit             : " + (int)profits + " $");
         System.out.println("wins               : " + (wins));
         System.out.println("losses             : " + (losses));
         System.out.println("biggest win        : " + ((biggestWin)-1)*100 + " %");
         System.out.println("biggest loss       : " + ((biggestLoss)-1)*100 + " %");
         System.out.println("wirate             : " + (wins/(wins+losses))*100 + " %");
-        System.out.println("ROI                : " + ((profits)/1000)*100 + " %");
+        System.out.println("ROI                : " + ((profits)/startValue)*100 + " %");
         System.out.println("---");
 
     }
