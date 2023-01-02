@@ -49,8 +49,8 @@ public class UserController {
     private static CandlestickRepository staticCandlestickRepository;
     private static UserRepository staticUserRepository;
     private static FakeOrderRepository staticFakeOrderRepository;
-    private static double startValue = 4531;
-    private static int leverage = 50;
+    private static double startValue = 1000;
+    private static int leverage = 20;
 
     @GetMapping("/load-data")
     public String loadData(){
