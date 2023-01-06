@@ -34,6 +34,19 @@ public class Candlestick implements Serializable {
     private double ofiBullish;
     @SerializedName("ofiBearish")
     private double ofiBearish;
+
+    @SerializedName("delta")
+    private double delta;
+    @SerializedName("maxDelta")
+    private double maxDelta;
+    @SerializedName("minDelta")
+    private double minDelta;
+    @SerializedName("bullishImbalances")
+    private int bullishImbalances;
+    @SerializedName("bearishImbalances")
+    private int bearishImbalances;
+
+
     @SerializedName("ema")
     private double ema;
 }

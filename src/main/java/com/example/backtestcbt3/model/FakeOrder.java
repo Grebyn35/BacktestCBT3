@@ -27,4 +27,11 @@ public class FakeOrder implements Serializable {
     private String timeOpened;
     private String timeClosed;
     private long candlestickId;
+    private double volume;
+    private double delta;
+    private double maxDelta;
+    private double minDelta;
+
+    private double ofiBullish;
+    private double ofiBearish;
 }
