@@ -153,15 +153,13 @@ public class UserController {
         //Whole dataset
         ArrayList<Candlestick> candlesticks = staticCandlestickRepository.findAll();
         ArrayList<Candlestick> simulatedCandlesticks = new ArrayList<>();
-        ArrayList<Candlestick> dailySimulatedCandlesticks = new ArrayList<>();
+
         for(int i = 0; i<candlesticks.size();i++){
             //Adding a new candlestick like below simulates realtime data with a new opne, close low, high
             simulatedCandlesticks.add(candlesticks.get(i));
-            dailySimulatedCandlesticks.add(candlesticks.get(i));
 
             //Removes old values in the simulated data not being used for iteration efficiency
             simulatedCandlesticks = removeOverflow(simulatedCandlesticks, stepBack);
-            dailySimulatedCandlesticks = removeOverflow(dailySimulatedCandlesticks, 720);
 
             //Check if a long position is open
             startingBalanceLong = monitorLongPositions(simulatedCandlesticks.get(simulatedCandlesticks.size()-1), startingBalanceLong);
