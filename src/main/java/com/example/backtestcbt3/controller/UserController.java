@@ -27,8 +27,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -59,6 +58,24 @@ public class UserController {
         saveCandlesticksData();
         return "visualiser";
     }
+    @GetMapping("/visualize-ml")
+    public String visualiseML(Model model) throws IOException {
+        ArrayList<Double> actualPricesList = new ArrayList<Double>();
+        ArrayList<Double> predictedPricesList = new ArrayList<Double>();
+        String row;
+        BufferedReader csvReaderActual = new BufferedReader(new FileReader("C:\\Users\\Grebyn\\Downloads\\actual_prices.csv"));
+        BufferedReader csvReaderPredicted = new BufferedReader(new FileReader("C:\\Users\\Grebyn\\Downloads\\predicted_prices.csv"));
+
+        while ((row = csvReaderActual.readLine()) != null) {
+            actualPricesList.add(Double.parseDouble(row));
+        }
+        while ((row = csvReaderPredicted.readLine()) != null) {
+            predictedPricesList.add(Double.parseDouble(row));
+        }
+        model.addAttribute("actualPricesList", actualPricesList);
+        model.addAttribute("predictedPricesList", predictedPricesList);
+        return "visualiser_ml";
+    }
     @GetMapping("/backtest-data/{stepBack}/{takeProfit}")
     public String backtestData(@PathVariable int stepBack, @PathVariable double takeProfit, Model model) throws FileNotFoundException, ParseException, InterruptedException {
         removeFakeOrders();
@@ -69,6 +86,17 @@ public class UserController {
     @GetMapping("/visualise-data")
     public String visualiseData(Model model){
         visualiseDataModel(model);
+        return "visualiser";
+    }
+    @GetMapping("/print-data")
+    public String printData(Model model) throws IOException {
+        ArrayList<Candlestick> candlesticks = staticCandlestickRepository.findAll();
+        for(int i = 0; i<candlesticks.size();i++){
+            PrintWriter pw = new PrintWriter(new FileWriter("C:\\Users\\Grebyn\\Downloads\\test-data.csv", true));
+            pw.println(candlesticks.get(i).getClose() + "," +candlesticks.get(i).getOpen() + "," +candlesticks.get(i).getHigh() + "," +candlesticks.get(i).getLow() + "," +
+                    candlesticks.get(i).getDelta() + "," +candlesticks.get(i).getMaxDelta() + "," +candlesticks.get(i).getMinDelta() + "," +candlesticks.get(i).getVolume() + "," +candlesticks.get(i).getId());
+            pw.close();
+        }
         return "visualiser";
     }
     public void visualiseDataModel(Model model){
@@ -211,27 +239,61 @@ public class UserController {
         }
         return true;
     }
-    public double atr(ArrayList<Candlestick> candlesticks){
-        ArrayList<Double> trueRange = new ArrayList<>();
-        for(int i = candlesticks.size()-14; i<candlesticks.size();i++){
-            double HL = candlesticks.get(i).getHigh()-candlesticks.get(i).getLow();
-            double HPC = candlesticks.get(i).getHigh()-candlesticks.get(i-1).getClose();
-            double LPC = candlesticks.get(i).getLow()-candlesticks.get(i-1).getClose();
-            if(HL >= HPC && HL >= LPC){
-                trueRange.add(HL);
+    public ArrayList<Candlestick> makeHigherTimeframe(ArrayList<Candlestick> candlesticks, int size){
+        ArrayList<Candlestick> candlesticksHigher = new ArrayList<>();
+        int count = 0;
+        Candlestick candlestick = new Candlestick();
+        double deltaMax = 0;
+        double deltaMin = 0;
+        for(int i = 0; i<candlesticks.size();i++){
+            if(count==size){
+                candlestick.setDelta(candlesticks.get(i).getDelta());
+                if(candlestick.getDelta()>0){
+                    candlestick.setOfiBullish(calculateOfi(candlestick.getDelta(), candlestick.getMaxDelta(), candlestick.getMinDelta()));
+                }
+                else{
+                    candlestick.setOfiBearish(calculateOfi(candlestick.getDelta(), candlestick.getMaxDelta(), candlestick.getMinDelta()));
+                }
+                candlesticksHigher.add(candlestick);
+                candlestick = null;
+                count = 0;
+                deltaMax = 0;
+                deltaMin = 0;
+                continue;
             }
-            else if(HPC >= HL && HPC >= LPC){
-                trueRange.add(HPC);
+            if(count==0){
+                candlestick = candlesticks.get(i);
             }
-            else if(LPC >= HL && LPC >= HPC){
-                trueRange.add(LPC);
+            else if(candlesticks.get(i).getHigh()>candlestick.getHigh()){
+                candlestick.setHigh(candlesticks.get(i).getHigh());
             }
+            else if(candlesticks.get(i).getLow()<candlestick.getLow()){
+                candlestick.setLow(candlesticks.get(i).getLow());
+            }
+            else if(candlesticks.get(i).getMinDelta()<deltaMin){
+                deltaMin = candlesticks.get(i).getMinDelta();
+                candlestick.setMinDelta(candlesticks.get(i).getMinDelta());
+            }
+            else if(candlesticks.get(i).getMaxDelta()>deltaMax){
+                deltaMax = candlesticks.get(i).getMaxDelta();
+                candlestick.setMaxDelta(candlesticks.get(i).getMaxDelta());
+            }
+            count++;
         }
-        double tr = 0;
-        for(int i = 0; i<trueRange.size();i++){
-            tr+=trueRange.get(i);
+        return candlesticksHigher;
+    }
+    public static double calculateOfi(double delta, double deltaMax, double deltaMin){
+        double positiveSignal;
+        if(delta>0){
+            positiveSignal = delta / deltaMax;
         }
-        return tr/trueRange.size();
+        else{
+            positiveSignal = delta / deltaMin;
+        }
+        if(positiveSignal>0){
+            return positiveSignal;
+        }
+        return 0;
     }
     public static void returnResults(){
         double profits = 0;
@@ -242,6 +304,14 @@ public class UserController {
         double biggestLoss = 1;
         ArrayList<FakeOrder> fakeOrders = staticFakeOrderRepository.findAllByExitPriceIsGreaterThan(0);
         for(int i = 0; i<fakeOrders.size();i++){
+            boolean trade = true;
+            if(fakeOrders.get(i).getPnl()>0){
+                trade = true;
+            }
+            else{
+                trade = false;
+            }
+            System.out.println(trade + "," + fakeOrders.get(i).getVolume() + "," + fakeOrders.get(i).getDelta() + "," + fakeOrders.get(i).getMaxDelta() + "," + fakeOrders.get(i).getMinDelta() + "," + fakeOrders.get(i).getOfiBearish() + "," + fakeOrders.get(i).getOfiBullish());
             //System.out.println(completedOrders.get(i).getPnl() + " = " + (profits + completedOrders.get(i).getPnl()) + " roi: " + completedOrders.get(i).getRoi());
             profits += fakeOrders.get(i).getPnl();
             //System.out.println(completedOrders.get(i).getPnl() + " : " + (completedOrders.get(i).getRoi()-1)*100);
@@ -273,6 +343,12 @@ public class UserController {
     public static void createFakeShort(ArrayList<Candlestick> simulatedCandlesticks, double takeProfit, Candlestick dailyHigh){
         FakeOrder fakeOrder = new FakeOrder();
         fakeOrder.setSide("Sell");
+        fakeOrder.setOfiBearish(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish());
+        fakeOrder.setOfiBullish(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish());
+        fakeOrder.setVolume(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getVolume());
+        fakeOrder.setDelta(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getDelta());
+        fakeOrder.setMaxDelta(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getMaxDelta());
+        fakeOrder.setMinDelta(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getMinDelta());
         fakeOrder.setCandlestickId(dailyHigh.getId());
         fakeOrder.setTimeOpened(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOpenTime());
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
@@ -285,6 +361,12 @@ public class UserController {
     public static void createFakeLong(ArrayList<Candlestick> simulatedCandlesticks, double takeProfit, Candlestick dailyLow){
         FakeOrder fakeOrder = new FakeOrder();
         fakeOrder.setSide("Buy");
+        fakeOrder.setOfiBearish(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish());
+        fakeOrder.setOfiBullish(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish());
+        fakeOrder.setVolume(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getVolume());
+        fakeOrder.setDelta(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getDelta());
+        fakeOrder.setMaxDelta(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getMaxDelta());
+        fakeOrder.setMinDelta(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getMinDelta());
         fakeOrder.setCandlestickId(dailyLow.getId());
         fakeOrder.setTimeOpened(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOpenTime());
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
