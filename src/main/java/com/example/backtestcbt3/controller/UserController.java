@@ -271,7 +271,7 @@ public class UserController {
         return tr/trueRange.size();
     }
     public boolean volumeImbalanceLong(ArrayList<Candlestick> candlesticks){
-        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>1000){
+        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2000){
             if(candlesticks.get(candlesticks.size()-1).getDelta() > candlesticks.get(candlesticks.size()-2).getDelta() && candlesticks.get(candlesticks.size()-2).getDelta() > candlesticks.get(candlesticks.size()-3).getDelta()){
                 return true;
             }
@@ -279,7 +279,7 @@ public class UserController {
         return false;
     }
     public boolean volumeImbalanceShort(ArrayList<Candlestick> candlesticks){
-        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>1000){
+        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2000){
             if(candlesticks.get(candlesticks.size()-1).getDelta() < candlesticks.get(candlesticks.size()-2).getDelta() && candlesticks.get(candlesticks.size()-2).getDelta() < candlesticks.get(candlesticks.size()-3).getDelta()){
                 return true;
             }
