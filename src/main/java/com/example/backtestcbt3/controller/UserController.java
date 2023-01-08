@@ -271,7 +271,7 @@ public class UserController {
         return tr/trueRange.size();
     }
     public boolean volumeImbalance(ArrayList<Candlestick> candlesticks){
-        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>1000){
+        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2000){
             return true;
         }
         return false;
@@ -405,10 +405,9 @@ public class UserController {
         fakeOrder.setCandlestickId(dailyHigh.getId());
         fakeOrder.setTimeOpened(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOpenTime());
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
-        fakeOrder.setStopLoss(dailyHigh.getHigh());
-        fakeOrder.setTakeProfit(calcTPShort(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
         fakeOrder.setStopLoss(dailyHigh.getClose());
-        if(fakeOrder.getTakeProfit()<fakeOrder.getEntryPrice()*0.996){
+        fakeOrder.setTakeProfit(calcTPShort(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
+        if(fakeOrder.getTakeProfit()<fakeOrder.getEntryPrice()*0.995){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
@@ -424,10 +423,9 @@ public class UserController {
         fakeOrder.setCandlestickId(dailyLow.getId());
         fakeOrder.setTimeOpened(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOpenTime());
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
-        fakeOrder.setStopLoss(dailyLow.getLow());
-        fakeOrder.setTakeProfit(calcTPLong(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
         fakeOrder.setStopLoss(dailyLow.getClose());
-        if(fakeOrder.getTakeProfit()>fakeOrder.getEntryPrice()*1.004){
+        fakeOrder.setTakeProfit(calcTPLong(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
+        if(fakeOrder.getTakeProfit()>fakeOrder.getEntryPrice()*1.005){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
