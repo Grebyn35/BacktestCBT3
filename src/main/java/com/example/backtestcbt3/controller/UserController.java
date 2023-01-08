@@ -223,10 +223,10 @@ public class UserController {
                 else{
                     dailyVolumeThreshold = 1.0075;
                 }
-                if(volumeImbalance(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                if(volumeImbalanceLong(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeLong(simulatedCandlesticks, takeProfit, dailyLow, atr(simulatedCandlesticks));
                 }
-                else if(volumeImbalance(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                else if(volumeImbalanceShort(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeShort(simulatedCandlesticks, takeProfit, dailyHigh, atr(simulatedCandlesticks));
                 }
                 /*//If the algorithm is valid for short, a short will open based upon the function 'priceBounceBearish'
@@ -270,9 +270,19 @@ public class UserController {
         }
         return tr/trueRange.size();
     }
-    public boolean volumeImbalance(ArrayList<Candlestick> candlesticks){
-        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2000){
-            return true;
+    public boolean volumeImbalanceLong(ArrayList<Candlestick> candlesticks){
+        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>1000){
+            if(candlesticks.get(candlesticks.size()-1).getDelta() > candlesticks.get(candlesticks.size()-2).getDelta() && candlesticks.get(candlesticks.size()-2).getDelta() > candlesticks.get(candlesticks.size()-3).getDelta()){
+                return true;
+            }
+        }
+        return false;
+    }
+    public boolean volumeImbalanceShort(ArrayList<Candlestick> candlesticks){
+        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>1000){
+            if(candlesticks.get(candlesticks.size()-1).getDelta() < candlesticks.get(candlesticks.size()-2).getDelta() && candlesticks.get(candlesticks.size()-2).getDelta() < candlesticks.get(candlesticks.size()-3).getDelta()){
+                return true;
+            }
         }
         return false;
     }
