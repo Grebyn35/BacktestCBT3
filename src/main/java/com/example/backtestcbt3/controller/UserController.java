@@ -216,13 +216,6 @@ public class UserController {
             if(simulatedCandlesticks.size()>stepBack-1){
                 simulatedCandlesticks.get(simulatedCandlesticks.size()-1).setEma(calcEma(simulatedCandlesticks,stepBack));
                 double volume = dailyHigh.getHigh() / dailyLow.getLow();
-                double dailyVolumeThreshold;
-                if(volume>1.01){
-                    dailyVolumeThreshold = 1.012;
-                }
-                else{
-                    dailyVolumeThreshold = 1.0075;
-                }
                 if(volumeImbalanceLong(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && volume>=1.0075 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeLong(simulatedCandlesticks, takeProfit, dailyLow, atr(simulatedCandlesticks));
                 }
