@@ -216,15 +216,15 @@ public class UserController {
             if(simulatedCandlesticks.size()>stepBack-1){
                 simulatedCandlesticks.get(simulatedCandlesticks.size()-1).setEma(calcEma(simulatedCandlesticks,stepBack));
                 double volume = dailyHigh.getHigh() / dailyLow.getLow();
-                if(volumeImbalanceLong(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && volume>=1.0075 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                if(volumeImbalanceLong(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeLong(simulatedCandlesticks, takeProfit, dailyLow, atr(simulatedCandlesticks));
                 }
-                else if(volumeImbalanceShort(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && volume>=1.0075 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                else if(volumeImbalanceShort(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeShort(simulatedCandlesticks, takeProfit, dailyHigh, atr(simulatedCandlesticks));
                 }
             }
-            dailyHigh = getDailyHigh(simulatedCandlesticks);
-            dailyLow = getDailyLow(simulatedCandlesticks);
+            dailyHigh = getDailyHigh(simulatedCandlesticks, simulatedCandlesticks.size()-1);
+            dailyLow = getDailyLow(simulatedCandlesticks, simulatedCandlesticks.size()-1);
         }
         //Print the results. Static variables are being used to compare best previous iterations of params
         returnResults();
@@ -252,13 +252,13 @@ public class UserController {
         return tr/trueRange.size();
     }
     public boolean volumeImbalanceLong(ArrayList<Candlestick> candlesticks){
-        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2500 && candlesticks.get(candlesticks.size()-3).getVolume()<1000){
+        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2500/* && candlesticks.get(candlesticks.size()-3).getVolume()<1000*/){
             return true;
         }
         return false;
     }
     public boolean volumeImbalanceShort(ArrayList<Candlestick> candlesticks){
-        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2500 && candlesticks.get(candlesticks.size()-3).getVolume()<1000){
+        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2500/* && candlesticks.get(candlesticks.size()-3).getVolume()<1000*/){
             return true;
         }
         return false;
@@ -479,18 +479,18 @@ public class UserController {
         }
         return startingBalance;
     }
-    public static Candlestick getDailyHigh(ArrayList<Candlestick> simulated){
+    public static Candlestick getDailyHigh(ArrayList<Candlestick> simulated, int lookBack){
         Candlestick highest = simulated.get(0);
-        for(int i = 0; i<simulated.size();i++){
+        for(int i = simulated.size()-lookBack; i<simulated.size();i++){
             if(simulated.get(i).getHigh()>highest.getHigh()){
                 highest = simulated.get(i);
             }
         }
         return highest;
     }
-    public static Candlestick getDailyLow(ArrayList<Candlestick> simulated){
+    public static Candlestick getDailyLow(ArrayList<Candlestick> simulated, int lookBack){
         Candlestick lowest = simulated.get(0);
-        for(int i = 0; i<simulated.size();i++){
+        for(int i = simulated.size()-lookBack; i<simulated.size();i++){
             if(simulated.get(i).getLow()<lowest.getLow()){
                 lowest = simulated.get(i);
             }
