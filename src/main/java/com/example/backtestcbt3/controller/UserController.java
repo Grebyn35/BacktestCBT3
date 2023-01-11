@@ -216,10 +216,10 @@ public class UserController {
             if(simulatedCandlesticks.size()>stepBack-1){
                 simulatedCandlesticks.get(simulatedCandlesticks.size()-1).setEma(calcEma(simulatedCandlesticks,stepBack));
                 double volume = dailyHigh.getHigh() / dailyLow.getLow();
-                if(volumeImbalanceLong(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && volume>=1.0075 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                if(volumeImbalanceLong(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getBullishImbalances()>7 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeLong(simulatedCandlesticks, takeProfit, dailyLow, atr(simulatedCandlesticks));
                 }
-                else if(volumeImbalanceShort(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && volume>=1.0075 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                else if(volumeImbalanceShort(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getBearishImbalances()>7 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeShort(simulatedCandlesticks, takeProfit, dailyHigh, atr(simulatedCandlesticks));
                 }
             }
@@ -252,13 +252,13 @@ public class UserController {
         return tr/trueRange.size();
     }
     public boolean volumeImbalanceLong(ArrayList<Candlestick> candlesticks){
-        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2500 && candlesticks.get(candlesticks.size()-3).getVolume()<1000){
+        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2500){
             return true;
         }
         return false;
     }
     public boolean volumeImbalanceShort(ArrayList<Candlestick> candlesticks){
-        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2500 && candlesticks.get(candlesticks.size()-3).getVolume()<1000){
+        if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2500){
             return true;
         }
         return false;
@@ -388,9 +388,9 @@ public class UserController {
         fakeOrder.setCandlestickId(dailyHigh.getId());
         fakeOrder.setTimeOpened(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOpenTime());
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
-        fakeOrder.setStopLoss(dailyHigh.getHigh());
+        fakeOrder.setStopLoss(dailyHigh.getClose());
         fakeOrder.setTakeProfit(calcTPShort(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()<fakeOrder.getEntryPrice()*0.999){
+        if(fakeOrder.getTakeProfit()<fakeOrder.getEntryPrice()*1){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
@@ -406,9 +406,9 @@ public class UserController {
         fakeOrder.setCandlestickId(dailyLow.getId());
         fakeOrder.setTimeOpened(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOpenTime());
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
-        fakeOrder.setStopLoss(dailyLow.getLow());
+        fakeOrder.setStopLoss(dailyLow.getClose());
         fakeOrder.setTakeProfit(calcTPLong(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()>fakeOrder.getEntryPrice()*1.001){
+        if(fakeOrder.getTakeProfit()>fakeOrder.getEntryPrice()*1.00){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
