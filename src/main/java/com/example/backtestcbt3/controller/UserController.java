@@ -404,7 +404,7 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(dailyHigh.getClose());
         fakeOrder.setTakeProfit(calcTPShort(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()<fakeOrder.getEntryPrice()*1){
+        if(fakeOrder.getTakeProfit()<fakeOrder.getEntryPrice()){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
@@ -422,7 +422,7 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(dailyLow.getClose());
         fakeOrder.setTakeProfit(calcTPLong(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()>fakeOrder.getEntryPrice()*1.00){
+        if(fakeOrder.getTakeProfit()>fakeOrder.getEntryPrice()){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
@@ -496,7 +496,7 @@ public class UserController {
     public static Candlestick getDailyHigh(ArrayList<Candlestick> simulated){
         Candlestick highest = simulated.get(0);
         for(int i = 0; i<simulated.size();i++){
-            if(simulated.get(i).getClose()>highest.getClose()){
+            if(simulated.get(i).getHigh()>highest.getHigh()){
                 highest = simulated.get(i);
             }
         }
@@ -505,7 +505,7 @@ public class UserController {
     public static Candlestick getDailyLow(ArrayList<Candlestick> simulated){
         Candlestick lowest = simulated.get(0);
         for(int i = 0; i<simulated.size();i++){
-            if(simulated.get(i).getClose()<lowest.getClose()){
+            if(simulated.get(i).getLow()<lowest.getLow()){
                 lowest = simulated.get(i);
             }
         }
