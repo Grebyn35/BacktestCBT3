@@ -101,11 +101,16 @@ public class UserController {
     }
     public void visualiseDataModel(Model model){
         ArrayList<Double> dataTotal = new ArrayList<>();
-        ArrayList<Double> dataLong = new ArrayList<>();
-        ArrayList<Double> dataShort = new ArrayList<>();
         ArrayList<String> dateTotal = new ArrayList<>();
+
+        ArrayList<Double> dataLong = new ArrayList<>();
         ArrayList<String> dateLong = new ArrayList<>();
+
+        ArrayList<Double> dataShort = new ArrayList<>();
         ArrayList<String> dateShort = new ArrayList<>();
+
+        ArrayList<Double> dataVolume = new ArrayList<>();
+        ArrayList<String> dateVolume = new ArrayList<>();
         double startingBalanceTotal = startValue;
         double startingBalanceLong = startValue;
         double startingBalanceShort = startValue;
@@ -121,6 +126,7 @@ public class UserController {
         ArrayList<FakeOrder> fakeShortOrders = staticFakeOrderRepository.findAllBySideAndExitPriceIsGreaterThan("Sell", 0);
         ArrayList<FakeOrder> fakeTotalOrders = staticFakeOrderRepository.findAllByExitPriceIsGreaterThan(0);
         ArrayList<Candlestick> candlesticks = staticCandlestickRepository.findAll();
+
         for(int i = 0; i<fakeLongOrders.size();i++){
             startingBalanceLong += fakeLongOrders.get(i).getPnl();
             dataLong.add(startingBalanceLong);
@@ -132,18 +138,26 @@ public class UserController {
             dateShort.add(fakeShortOrders.get(i).getTimeOpened());
         }
 
+        for(int i = 0; i<candlesticks.size();i++){
+            dataVolume.add(candlesticks.get(i).getVolume());
+            dateVolume.add(candlesticks.get(i).getOpenTime());
+        }
+
         for(int i = 0; i<fakeTotalOrders.size();i++){
             startingBalanceTotal += fakeTotalOrders.get(i).getPnl();
             dataTotal.add(startingBalanceTotal);
             dateTotal.add(fakeTotalOrders.get(i).getTimeOpened());
         }
+
+        model.addAttribute("dataVolume", dataVolume.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
+        model.addAttribute("dateVolume", dateVolume.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("dataLong", dataLong.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("dataShort", dataShort.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("dataTotal", dataTotal.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("dateTotal", dateTotal.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("dateLong", dateLong.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
         model.addAttribute("dateShort", dateShort.toString().replaceAll("]","").replaceAll("\\[", "").replaceAll(" ", ""));
-        model.addAttribute("candlesticks", makeHigherTimeframeCandlestick(candlesticks, 20));
+        model.addAttribute("candlesticks", makeHigherTimeframeCandlestick(candlesticks, 5));
     }
     public ArrayList makeHigherTimeframeCandlestick(ArrayList<Candlestick> candlesticks, int size){
         ArrayList<Candlestick> candlesticksHigher = new ArrayList<>();
@@ -482,7 +496,7 @@ public class UserController {
     public static Candlestick getDailyHigh(ArrayList<Candlestick> simulated){
         Candlestick highest = simulated.get(0);
         for(int i = 0; i<simulated.size();i++){
-            if(simulated.get(i).getHigh()>highest.getHigh()){
+            if(simulated.get(i).getClose()>highest.getClose()){
                 highest = simulated.get(i);
             }
         }
@@ -491,7 +505,7 @@ public class UserController {
     public static Candlestick getDailyLow(ArrayList<Candlestick> simulated){
         Candlestick lowest = simulated.get(0);
         for(int i = 0; i<simulated.size();i++){
-            if(simulated.get(i).getLow()<lowest.getLow()){
+            if(simulated.get(i).getClose()<lowest.getClose()){
                 lowest = simulated.get(i);
             }
         }

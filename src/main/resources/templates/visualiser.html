@@ -28,6 +28,8 @@
 <body>
 <input style="display: none" id="dataTotal" type="text" th:value="${dataTotal}">
 <input style="display: none" id="dateTotal" type="text" th:value="${dateTotal}">
+<input style="display: none" id="dataVolume" type="text" th:value="${dataVolume}">
+<input style="display: none" id="dateVolume" type="text" th:value="${dateVolume}">
 <input style="display: none" id="dataLong" type="text" th:value="${dataLong}">
 <input style="display: none" id="dataShort" type="text" th:value="${dataShort}">
 <input style="display: none" id="dateLong" type="text" th:value="${dateLong}">
@@ -36,11 +38,14 @@
     <div class="col-sm-12">
         <canvas id="trade-stats-total"></canvas>
     </div>
-    <div class="col-sm-12">
-        <canvas id="trade-stats-long"></canvas>
+    <!--<div class="col-sm-12">
+        <canvas id="trade-stats-volume"></canvas>
     </div>
     <div class="col-sm-12">
         <div id="chart-candlesticks"></div>
+    </div>-->
+    <div class="col-sm-12">
+        <canvas id="trade-stats-long"></canvas>
     </div>
     <div class="col-sm-12">
         <canvas id="trade-stats-short"></canvas>
@@ -88,14 +93,17 @@
         },
     };
 
-  //  var chartLong = new ApexCharts(document.querySelector("#trade-stats-long"), optionsLong);
     var chartCandlestick = new ApexCharts(document.querySelector("#chart-candlesticks"), optionsCandlestick);
-    //var chartShort = new ApexCharts(document.querySelector("#trade-stats-short"), optionsShort);
     chartCandlestick.render();
 </script>
 <script>
     function returnArrayOfDataTotal(){
         let input = document.getElementById("dataTotal").value;
+        let array = input.split(",");
+        return array;
+    }
+    function returnArrayOfDataVolume(){
+        let input = document.getElementById("dataVolume").value;
         let array = input.split(",");
         return array;
     }
@@ -114,6 +122,11 @@
         let array = input.split(",");
         return array;
     }
+    function returnArrayOfDateVolume(){
+        let input = document.getElementById("dateVolume").value;
+        let array = input.split(",");
+        return array;
+    }
     function returnArrayOfDateLong(){
         let input = document.getElementById("dateLong").value;
         let array = input.split(",");
@@ -127,6 +140,7 @@
     const ctxTotal = document.getElementById('trade-stats-total');
     const ctxLong = document.getElementById('trade-stats-long');
     const ctxShort = document.getElementById('trade-stats-short');
+    const ctxVolume = document.getElementById('trade-stats-volume');
 
     new Chart(ctxTotal, {
         type: 'line',
@@ -155,6 +169,26 @@
             datasets: [{
                 label: 'Long trades',
                 data: returnArrayOfDataLong(),
+                borderWidth: 1,
+                borderColor: '#36A2EB',
+                backgroundColor: '#9BD0F5',
+            }],
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false
+                },
+            }
+        }
+    });
+    new Chart(ctxVolume, {
+        type: 'line',
+        data: {
+            labels: returnArrayOfDateVolume(),
+            datasets: [{
+                label: 'Volume',
+                data: returnArrayOfDataVolume(),
                 borderWidth: 1,
                 borderColor: '#36A2EB',
                 backgroundColor: '#9BD0F5',
