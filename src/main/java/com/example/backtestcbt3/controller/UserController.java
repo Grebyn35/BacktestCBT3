@@ -404,7 +404,7 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(dailyHigh.getClose());
         fakeOrder.setTakeProfit(calcTPShort(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()<fakeOrder.getEntryPrice()){
+        if(fakeOrder.getTakeProfit()<fakeOrder.getEntryPrice() && fakeOrder.getStopLoss()>fakeOrder.getEntryPrice()){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
@@ -422,7 +422,7 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(dailyLow.getClose());
         fakeOrder.setTakeProfit(calcTPLong(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()>fakeOrder.getEntryPrice()){
+        if(fakeOrder.getTakeProfit()>fakeOrder.getEntryPrice() && fakeOrder.getStopLoss()<fakeOrder.getEntryPrice()){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
