@@ -49,7 +49,7 @@ public class UserController {
     private static UserRepository staticUserRepository;
     private static FakeOrderRepository staticFakeOrderRepository;
     private static double startValue = 300;
-    private static int leverage = 5;
+    private static int leverage = 1;
 
     @GetMapping("/load-data")
     public String loadData(){
@@ -230,10 +230,10 @@ public class UserController {
             if(simulatedCandlesticks.size()>stepBack-1){
                 simulatedCandlesticks.get(simulatedCandlesticks.size()-1).setEma(calcEma(simulatedCandlesticks,stepBack));
                 double volume = dailyHigh.getHigh() / dailyLow.getLow();
-                if(volumeImbalanceLong(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getBullishImbalances()>7 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBullish()>0.95 && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                if(volumeImbalanceLong(simulatedCandlesticks) && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeLong(simulatedCandlesticks, takeProfit, dailyLow, atr(simulatedCandlesticks));
                 }
-                else if(volumeImbalanceShort(simulatedCandlesticks) && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getBearishImbalances()>7 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOfiBearish()>0.95 && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                else if(volumeImbalanceShort(simulatedCandlesticks) && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeShort(simulatedCandlesticks, takeProfit, dailyHigh, atr(simulatedCandlesticks));
                 }
             }
@@ -267,13 +267,17 @@ public class UserController {
     }
     public boolean volumeImbalanceLong(ArrayList<Candlestick> candlesticks){
         if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2000){
-            return true;
+            if(candlesticks.get(candlesticks.size()-1).getOfiBullish()>0.95) {
+                return true;
+            }
         }
         return false;
     }
     public boolean volumeImbalanceShort(ArrayList<Candlestick> candlesticks){
         if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>2000){
-            return true;
+            if(candlesticks.get(candlesticks.size()-1).getOfiBearish()>0.95) {
+                return true;
+            }
         }
         return false;
     }
@@ -511,10 +515,10 @@ public class UserController {
         }
         return lowest;
     }
-    public static boolean isCurrentYoungerThan4Ticks(Candlestick currentCandlestick, Candlestick breakoutEndCandlestick, int minutes){
-        Instant currentDate = parseDate(currentCandlestick.getOpenTime()).toInstant();
-        Instant breakoutEndDate = parseDate(breakoutEndCandlestick.getOpenTime()).toInstant();
-        if(currentDate.isBefore(breakoutEndDate.plus(minutes, ChronoUnit.MINUTES))){
+    public static boolean isCurrentOlderThan(Candlestick currentCandles, Candlestick openCandle, int minutes){
+        Instant currentDate = parseDate(currentCandles.getOpenTime()).toInstant();
+        Instant breakoutEndDate = parseDate(openCandle.getOpenTime()).toInstant();
+        if(currentDate.isAfter(breakoutEndDate.plus(minutes, ChronoUnit.MINUTES))){
             return true;
         }
         return false;
