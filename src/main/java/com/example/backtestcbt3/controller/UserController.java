@@ -49,7 +49,7 @@ public class UserController {
     private static UserRepository staticUserRepository;
     private static FakeOrderRepository staticFakeOrderRepository;
     private static double startValue = 100;
-    private static int leverage = 5;
+    private static int leverage = 1;
 
     @GetMapping("/load-data")
     public String loadData(){
