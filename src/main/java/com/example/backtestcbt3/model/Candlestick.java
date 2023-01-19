@@ -49,4 +49,5 @@ public class Candlestick implements Serializable {
 
     @SerializedName("ema")
     private double ema;
+    private double ema50;
 }
