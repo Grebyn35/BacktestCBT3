@@ -112,6 +112,7 @@ public class UserController {
         return "visualiser";
     }
     public void visualiseDataModel(Model model){
+        User user = staticUserRepository.findAll().get(0);
         ArrayList<Double> dataTotal = new ArrayList<>();
         ArrayList<String> dateTotal = new ArrayList<>();
 
@@ -123,9 +124,9 @@ public class UserController {
 
         ArrayList<Double> dataVolume = new ArrayList<>();
         ArrayList<String> dateVolume = new ArrayList<>();
-        double startingBalanceTotal = startValue;
-        double startingBalanceLong = startValue;
-        double startingBalanceShort = startValue;
+        double startingBalanceTotal = user.getEquity();
+        double startingBalanceLong = user.getEquity();
+        double startingBalanceShort = user.getEquity();
         dataTotal.add(startingBalanceTotal);
         dateTotal.add("2022-12-01-00:00");
 
@@ -380,6 +381,7 @@ public class UserController {
         return 0;
     }
     public static void returnResults(){
+        User user = staticUserRepository.findAll().get(0);
         double profits = 0;
         double wins = 0;
         double losses = 0;
@@ -409,14 +411,14 @@ public class UserController {
         System.out.println("average win size   : " + (roiDeltaWin/wins));
         System.out.println("average loss size  : " + (roiDeltaLoss/losses));
         System.out.println("time period        : " + fakeOrders.get(0).getTimeOpened() + " to " + fakeOrders.get(fakeOrders.size()-1).getTimeOpened());
-        System.out.println("starting balance   : " + startValue + " $");
+        System.out.println("starting balance   : " + user.getEquity() + " $");
         System.out.println("profit             : " + (int)profits + " $");
         System.out.println("wins               : " + (wins));
         System.out.println("losses             : " + (losses));
         System.out.println("biggest win        : " + ((biggestWin)-1)*100 + " %");
         System.out.println("biggest loss       : " + ((biggestLoss)-1)*100 + " %");
         System.out.println("wirate             : " + (wins/(wins+losses))*100 + " %");
-        System.out.println("ROI                : " + ((profits)/startValue)*100 + " %");
+        System.out.println("ROI                : " + ((profits)/user.getEquity())*100 + " %");
         System.out.println("---");
 
     }
