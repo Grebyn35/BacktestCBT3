@@ -23,5 +23,8 @@ public class User implements Serializable {
     private String role;
 
     private String password;
-    private double startingBalance = 1000;
+    private double equity = 500;
+    private double availableBalance = equity;
+    private double orderQty = 0.25;
+    private double leverage = 1;
 }

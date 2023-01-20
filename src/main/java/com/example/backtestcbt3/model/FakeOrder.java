@@ -22,7 +22,7 @@ public class FakeOrder implements Serializable {
     private double stopLoss;
     private double roi;
     private double pnl;
-    private double dollarQty = 1000;
+    private double qty = 0;
     private String side;
     private String timeOpened;
     private String timeClosed;
