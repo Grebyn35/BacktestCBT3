@@ -408,7 +408,7 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(dailyHigh.getClose());
         fakeOrder.setTakeProfit(calcTPShort(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()<fakeOrder.getEntryPrice() && fakeOrder.getStopLoss()>fakeOrder.getEntryPrice() && fakeOrder.getStopLoss()<fakeOrder.getEntryPrice()*1.015){
+        if(fakeOrder.getTakeProfit()<fakeOrder.getEntryPrice() && fakeOrder.getStopLoss()>fakeOrder.getEntryPrice() && fakeOrder.getStopLoss()<fakeOrder.getEntryPrice()*1.015 && staticFakeOrderRepository.findAllByExitPrice(0).size()<5){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }
@@ -426,7 +426,7 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(dailyLow.getClose());
         fakeOrder.setTakeProfit(calcTPLong(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        if(fakeOrder.getTakeProfit()>fakeOrder.getEntryPrice() && fakeOrder.getStopLoss()<fakeOrder.getEntryPrice() && fakeOrder.getStopLoss()>fakeOrder.getEntryPrice()*0.985){
+        if(fakeOrder.getTakeProfit()>fakeOrder.getEntryPrice() && fakeOrder.getStopLoss()<fakeOrder.getEntryPrice() && fakeOrder.getStopLoss()>fakeOrder.getEntryPrice()*0.985 && staticFakeOrderRepository.findAllByExitPrice(0).size()<5){
             staticFakeOrderRepository.save(fakeOrder);
         }
     }

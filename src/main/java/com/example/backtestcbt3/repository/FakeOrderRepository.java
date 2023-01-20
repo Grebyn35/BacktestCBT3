@@ -16,6 +16,7 @@ public interface FakeOrderRepository extends CrudRepository<FakeOrder,Long> {
     FakeOrder findByCandlestickId(long id);
     ArrayList<FakeOrder> findAll();
     ArrayList<FakeOrder> findAllBySideAndExitPrice(String side,double greaterThan);
+    ArrayList<FakeOrder> findAllByExitPrice(double greaterThan);
     ArrayList<FakeOrder> findAllBySideAndExitPriceIsGreaterThan(String side,double greaterThan);
     ArrayList<FakeOrder> findAllByExitPriceIsGreaterThan(double greaterThan);
 }
