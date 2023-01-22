@@ -444,7 +444,7 @@ public class UserController {
         fakeOrder.setStopLoss(dailyHigh.getClose());
         fakeOrder.setTakeProfit(calcTPShort(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
         fakeOrder.setQty(((user.getEquity() * user.getOrderQty())) / fakeOrder.getEntryPrice());
-        if(user.getAvailableBalance()>(user.getEquity()*user.getOrderQty())  && fakeOrder.getStopLoss()<fakeOrder.getEntryPrice()*1.015 && fakeOrder.getStopLoss()>fakeOrder.getEntryPrice()){
+        if(user.getAvailableBalance()>(user.getEquity()*user.getOrderQty()) && fakeOrder.getStopLoss()<fakeOrder.getEntryPrice()*1.015 && fakeOrder.getStopLoss()>fakeOrder.getEntryPrice()){
             user.setAvailableBalance(user.getAvailableBalance()-(fakeOrder.getQty()*fakeOrder.getEntryPrice()));
             staticUserRepository.save(user);
             staticFakeOrderRepository.save(fakeOrder);
