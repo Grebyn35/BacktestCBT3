@@ -443,12 +443,22 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(dailyHigh.getClose());
         fakeOrder.setTakeProfit(calcTPShort(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        fakeOrder.setQty(((user.getEquity()*user.getOrderQty())*0.9998)/fakeOrder.getEntryPrice());
-        if(user.getAvailableBalance()>(user.getEquity()*user.getOrderQty())  && fakeOrder.getStopLoss()<fakeOrder.getEntryPrice()*1.015){
+        fakeOrder.setQty(((user.getEquity() * user.getOrderQty()) * 0.9998) / fakeOrder.getEntryPrice());
+        if(user.getAvailableBalance()>(user.getEquity()*user.getOrderQty())  && fakeOrder.getStopLoss()<fakeOrder.getEntryPrice()*1.015 && fakeOrder.getStopLoss()>fakeOrder.getEntryPrice()){
             user.setAvailableBalance(user.getAvailableBalance()-(fakeOrder.getQty()*fakeOrder.getEntryPrice()));
             staticUserRepository.save(user);
             staticFakeOrderRepository.save(fakeOrder);
         }
+    }
+    //Denna kan vara skitbra att implementera efter ett tag av komfirmation på att strategin funkar. Behöver korrigeras
+    public static double setHedgeQty(FakeOrder fakeOrder, User user, String oposingSide){
+        if(staticFakeOrderRepository.findAllBySideAndExitPrice(oposingSide, 0).size()>0) {
+            fakeOrder.setQty(((user.getEquity() * user.getOrderQty()) * 3 * 0.9998) / fakeOrder.getEntryPrice());
+        }
+        else{
+            fakeOrder.setQty(((user.getEquity() * user.getOrderQty()) * 0.9998) / fakeOrder.getEntryPrice());
+        }
+        return fakeOrder.getQty();
     }
     public static void createFakeLong(ArrayList<Candlestick> simulatedCandlesticks, double takeProfit, Candlestick dailyLow, double atr){
         User user = staticUserRepository.findAll().get(0);
@@ -465,8 +475,8 @@ public class UserController {
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
         fakeOrder.setStopLoss(dailyLow.getClose());
         fakeOrder.setTakeProfit(calcTPLong(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
-        fakeOrder.setQty(((user.getEquity()*user.getOrderQty())*0.9998)/fakeOrder.getEntryPrice());
-        if(user.getAvailableBalance()>(user.getEquity()*user.getOrderQty()) && fakeOrder.getStopLoss()>fakeOrder.getEntryPrice()*0.985){
+        fakeOrder.setQty(((user.getEquity() * user.getOrderQty()) * 0.9998) / fakeOrder.getEntryPrice());
+        if(user.getAvailableBalance()>(user.getEquity()*user.getOrderQty()) && fakeOrder.getStopLoss()>fakeOrder.getEntryPrice()*0.985 && fakeOrder.getStopLoss()<fakeOrder.getEntryPrice()){
             user.setAvailableBalance(user.getAvailableBalance()-(fakeOrder.getQty()*fakeOrder.getEntryPrice()));
             staticUserRepository.save(user);
             staticFakeOrderRepository.save(fakeOrder);
