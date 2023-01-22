@@ -48,8 +48,6 @@ public class UserController {
     private static CandlestickRepository staticCandlestickRepository;
     private static UserRepository staticUserRepository;
     private static FakeOrderRepository staticFakeOrderRepository;
-    private static double startValue = 100;
-    private static int leverage = 1;
 
     @GetMapping("/load-data")
     public String loadData(){
@@ -97,6 +95,16 @@ public class UserController {
         user.setPassword("123");
         user.setOrderQty(0.25);
         user.setRole("ROLE_USER");
+        staticUserRepository.save(user);
+        return "visualiser";
+    }
+    @GetMapping("/reset-equity/{equity}/{leverage}")
+    public String resetEquity(Model model, @PathVariable long equity, @PathVariable double leverage){
+        User user = staticUserRepository.findAll().get(0);
+        user.setEquity(equity);
+        user.setLeverage(leverage);
+        user.setAvailableBalance(user.getEquity());
+        System.out.println("reset key values to " + equity + " equity, " + leverage + " leverage");
         staticUserRepository.save(user);
         return "visualiser";
     }
@@ -221,9 +229,6 @@ public class UserController {
         Candlestick dailyHigh = null;
         Candlestick dailyLow = null;
 
-        double startingBalanceLong = (startValue * leverage);
-        double startingBalancShort = (startValue * leverage);
-
         //Whole dataset
         ArrayList<Candlestick> candlesticks = staticCandlestickRepository.findAll();
         ArrayList<Candlestick> simulatedCandlesticks = new ArrayList<>();
@@ -243,10 +248,10 @@ public class UserController {
             if(simulatedCandlesticks.size()>stepBack-1){
                 simulatedCandlesticks.get(simulatedCandlesticks.size()-1).setEma(calcEma(simulatedCandlesticks,stepBack));
                 double volume = dailyHigh.getHigh() / dailyLow.getLow();
-                if(volumeImbalanceLong(simulatedCandlesticks) && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                if(volumeImbalanceLong(simulatedCandlesticks) && volume>=1.01 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeLong(simulatedCandlesticks, takeProfit, dailyLow, atr(simulatedCandlesticks));
                 }
-                else if(volumeImbalanceShort(simulatedCandlesticks) && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                else if(volumeImbalanceShort(simulatedCandlesticks) && volume>=1.01 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeShort(simulatedCandlesticks, takeProfit, dailyHigh, atr(simulatedCandlesticks));
                 }
             }
@@ -266,9 +271,9 @@ public class UserController {
             fakeShortOrders.get(i).setPnl((fakeShortOrders.get(i).getQty()*fakeShortOrders.get(i).getEntryPrice())*fakeShortOrders.get(i).getRoi() - (fakeShortOrders.get(i).getQty()*fakeShortOrders.get(i).getEntryPrice()));
             fakeShortOrders.get(i).setTimeClosed(candlestick.getOpenTime());
             user.setAvailableBalance(user.getAvailableBalance() + (fakeShortOrders.get(i).getQty()*fakeShortOrders.get(i).getEntryPrice()+fakeShortOrders.get(i).getPnl()));
-            staticUserRepository.save(user);
             staticFakeOrderRepository.save(fakeShortOrders.get(i));
         }
+        staticUserRepository.save(user);
     }
     public double atr(ArrayList<Candlestick> candlesticks){
         ArrayList<Double> trueRange = new ArrayList<>();
@@ -420,7 +425,8 @@ public class UserController {
         System.out.println("wirate             : " + (wins/(wins+losses))*100 + " %");
         System.out.println("ROI                : " + ((profits)/user.getEquity())*100 + " %");
         System.out.println("---");
-
+        user.setEquity(user.getAvailableBalance());
+        staticUserRepository.save(user);
     }
     public static void createFakeShort(ArrayList<Candlestick> simulatedCandlesticks, double takeProfit, Candlestick dailyHigh, double atr){
         User user = staticUserRepository.findAll().get(0);
@@ -486,6 +492,7 @@ public class UserController {
                 fakeShortOrders.get(i).setExitPrice(fakeShortOrders.get(i).getTakeProfit());
                 fakeShortOrders.get(i).setRoi(fakeShortOrders.get(i).getEntryPrice() / fakeShortOrders.get(i).getExitPrice());
                 fakeShortOrders.get(i).setPnl((fakeShortOrders.get(i).getQty()*fakeShortOrders.get(i).getEntryPrice())*fakeShortOrders.get(i).getRoi() - (fakeShortOrders.get(i).getQty()*fakeShortOrders.get(i).getEntryPrice()));
+                fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl()*user.getLeverage());
                 fakeShortOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 System.out.println("short $$$ : roi: " + fakeShortOrders.get(i).getRoi() + " : pnl: " + fakeShortOrders.get(i).getPnl() + " : " + fakeShortOrders.get(i).getTimeOpened());
                 user.setAvailableBalance(user.getAvailableBalance() + ((fakeShortOrders.get(i).getQty()*fakeShortOrders.get(i).getEntryPrice())+fakeShortOrders.get(i).getPnl()));
@@ -495,6 +502,7 @@ public class UserController {
                 fakeShortOrders.get(i).setExitPrice(fakeShortOrders.get(i).getStopLoss());
                 fakeShortOrders.get(i).setRoi(fakeShortOrders.get(i).getEntryPrice() / fakeShortOrders.get(i).getExitPrice());
                 fakeShortOrders.get(i).setPnl((fakeShortOrders.get(i).getQty()*fakeShortOrders.get(i).getEntryPrice())*fakeShortOrders.get(i).getRoi() - (fakeShortOrders.get(i).getQty()*fakeShortOrders.get(i).getEntryPrice()));
+                fakeShortOrders.get(i).setPnl(fakeShortOrders.get(i).getPnl()*user.getLeverage());
                 fakeShortOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 System.out.println("short loss : roi: " + fakeShortOrders.get(i).getRoi() + " : pnl: " + fakeShortOrders.get(i).getPnl() + " : " + fakeShortOrders.get(i).getTimeOpened());
                 user.setAvailableBalance(user.getAvailableBalance() + ((fakeShortOrders.get(i).getQty()*fakeShortOrders.get(i).getEntryPrice())+fakeShortOrders.get(i).getPnl()));
@@ -511,6 +519,7 @@ public class UserController {
                 fakeLongOrders.get(i).setExitPrice(fakeLongOrders.get(i).getTakeProfit());
                 fakeLongOrders.get(i).setRoi(fakeLongOrders.get(i).getExitPrice() / fakeLongOrders.get(i).getEntryPrice());
                 fakeLongOrders.get(i).setPnl((fakeLongOrders.get(i).getQty()*fakeLongOrders.get(i).getEntryPrice())*fakeLongOrders.get(i).getRoi() - (fakeLongOrders.get(i).getQty()*fakeLongOrders.get(i).getEntryPrice()));
+                fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl()*user.getLeverage());
                 fakeLongOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 System.out.println("long $$$ : roi: " + fakeLongOrders.get(i).getRoi() + " : pnl: " + fakeLongOrders.get(i).getPnl() + " : " + fakeLongOrders.get(i).getTimeOpened());
                 user.setAvailableBalance(user.getAvailableBalance() + ((fakeLongOrders.get(i).getQty()*fakeLongOrders.get(i).getEntryPrice())+fakeLongOrders.get(i).getPnl()));
@@ -521,6 +530,7 @@ public class UserController {
                 fakeLongOrders.get(i).setExitPrice(fakeLongOrders.get(i).getStopLoss());
                 fakeLongOrders.get(i).setRoi(fakeLongOrders.get(i).getExitPrice() / fakeLongOrders.get(i).getEntryPrice());
                 fakeLongOrders.get(i).setPnl((fakeLongOrders.get(i).getQty()*fakeLongOrders.get(i).getEntryPrice())*fakeLongOrders.get(i).getRoi() - (fakeLongOrders.get(i).getQty()*fakeLongOrders.get(i).getEntryPrice()));
+                fakeLongOrders.get(i).setPnl(fakeLongOrders.get(i).getPnl()*user.getLeverage());
                 fakeLongOrders.get(i).setTimeClosed(candlestick.getOpenTime());
                 System.out.println("long loss : roi: " + fakeLongOrders.get(i).getRoi() + " : pnl: " + fakeLongOrders.get(i).getPnl() + " : " + fakeLongOrders.get(i).getTimeOpened());
                 user.setAvailableBalance(user.getAvailableBalance() + ((fakeLongOrders.get(i).getQty()*fakeLongOrders.get(i).getEntryPrice())+fakeLongOrders.get(i).getPnl()));
