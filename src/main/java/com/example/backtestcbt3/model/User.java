@@ -25,6 +25,6 @@ public class User implements Serializable {
     private String password;
     private double equity = 500;
     private double availableBalance = equity;
-    private double orderQty = 0.25;
+    private double orderQty = 0.15;
     private double leverage = 1;
 }
