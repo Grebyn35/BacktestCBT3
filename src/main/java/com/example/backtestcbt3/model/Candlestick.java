@@ -34,6 +34,7 @@ public class Candlestick implements Serializable {
     private double ofiBullish;
     @SerializedName("ofiBearish")
     private double ofiBearish;
+    private double atr;
 
     @SerializedName("delta")
     private double delta;

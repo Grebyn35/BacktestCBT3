@@ -244,14 +244,14 @@ public class UserController {
             //Check if a short position is open
             monitorShortPositions(simulatedCandlesticks.get(simulatedCandlesticks.size()-1));
 
-            //Check if the data is old enough to start working with. Ex 1440 on the minute chart equals 24 hours of data.
             if(simulatedCandlesticks.size()>stepBack-1){
+                simulatedCandlesticks.get(simulatedCandlesticks.size()-1).setAtr((atr(simulatedCandlesticks)));
                 simulatedCandlesticks.get(simulatedCandlesticks.size()-1).setEma(calcEma(simulatedCandlesticks,stepBack));
                 double volume = dailyHigh.getHigh() / dailyLow.getLow();
-                if(volumeImbalanceLong(simulatedCandlesticks) && volume>=1.01 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                if(volumeImbalanceLong(simulatedCandlesticks) && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() > simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeLong(simulatedCandlesticks, takeProfit, dailyLow, atr(simulatedCandlesticks));
                 }
-                else if(volumeImbalanceShort(simulatedCandlesticks) && volume>=1.01 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
+                else if(volumeImbalanceShort(simulatedCandlesticks) && volume>=1.007 && simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose() < simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getEma()){
                     createFakeShort(simulatedCandlesticks, takeProfit, dailyHigh, atr(simulatedCandlesticks));
                 }
             }
@@ -277,29 +277,25 @@ public class UserController {
     }
     public double atr(ArrayList<Candlestick> candlesticks){
         ArrayList<Double> trueRange = new ArrayList<>();
+        ArrayList<Double> averageTrueRange = new ArrayList<>();
         for(int i = candlesticks.size()-14; i<candlesticks.size();i++){
-            double HL = candlesticks.get(i).getHigh()-candlesticks.get(i).getLow();
-            double HPC = candlesticks.get(i).getHigh()-candlesticks.get(i-1).getClose();
-            double LPC = candlesticks.get(i).getLow()-candlesticks.get(i-1).getClose();
-            if(HL >= HPC && HL >= LPC){
-                trueRange.add(HL);
-            }
-            else if(HPC >= HL && HPC >= LPC){
-                trueRange.add(HPC);
-            }
-            else if(LPC >= HL && LPC >= HPC){
-                trueRange.add(LPC);
-            }
+            double hl = candlesticks.get(i).getHigh() - candlesticks.get(i).getLow();
+            double ho = Math.abs(candlesticks.get(i).getHigh() - candlesticks.get(i).getOpen());
+            double lo = Math.abs(candlesticks.get(i).getLow() - candlesticks.get(i).getOpen());
+            trueRange.add(Math.max(Math.max(hl, ho), lo));
         }
-        double tr = 0;
-        for(int i = 0; i<trueRange.size();i++){
-            tr+=trueRange.get(i);
+        // calculate the ATR
+        double prevATR = candlesticks.get(candlesticks.size()-2).getAtr();
+        for (int i = 0; i < trueRange.size(); i++) {
+            double currentATR = (prevATR * (14 - 1) + trueRange.get(i)) / 14;
+            averageTrueRange.add(currentATR);
+            prevATR = currentATR;
         }
-        return tr/trueRange.size();
+        return averageTrueRange.get(averageTrueRange.size() - 1);
     }
     public boolean volumeImbalanceLong(ArrayList<Candlestick> candlesticks){
         if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>3000){
-            if(candlesticks.get(candlesticks.size()-1).getDelta()>1000) {
+            if(candlesticks.get(candlesticks.size()-1).getDelta()>600) {
                 return true;
             }
         }
@@ -307,7 +303,7 @@ public class UserController {
     }
     public boolean volumeImbalanceShort(ArrayList<Candlestick> candlesticks){
         if(candlesticks.get(candlesticks.size()-1).getVolume() > candlesticks.get(candlesticks.size()-2).getVolume() && candlesticks.get(candlesticks.size()-2).getVolume() > candlesticks.get(candlesticks.size()-3).getVolume() && candlesticks.get(candlesticks.size()-1).getVolume()>3000){
-            if(candlesticks.get(candlesticks.size()-1).getDelta()<-1000) {
+            if(candlesticks.get(candlesticks.size()-1).getDelta()<-600) {
                 return true;
             }
         }
@@ -441,7 +437,7 @@ public class UserController {
         fakeOrder.setCandlestickId(dailyHigh.getId());
         fakeOrder.setTimeOpened(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getOpenTime());
         fakeOrder.setEntryPrice(simulatedCandlesticks.get(simulatedCandlesticks.size()-1).getClose());
-        fakeOrder.setStopLoss(dailyHigh.getClose());
+        fakeOrder.setStopLoss(dailyHigh.getHigh());
         fakeOrder.setTakeProfit(calcTPShort(fakeOrder.getStopLoss(), fakeOrder.getEntryPrice(), takeProfit));
         fakeOrder.setQty(((user.getEquity() * user.getOrderQty())) / fakeOrder.getEntryPrice());
         if(user.getAvailableBalance()>(user.getEquity()*user.getOrderQty()) && fakeOrder.getStopLoss()<fakeOrder.getEntryPrice()*1.015 && fakeOrder.getStopLoss()>fakeOrder.getEntryPrice()){
