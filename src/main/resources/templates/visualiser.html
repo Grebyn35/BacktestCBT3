@@ -26,86 +26,168 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<input style="display: none" id="dataTotal" type="text" th:value="${dataTotal}">
-<input style="display: none" id="dateTotal" type="text" th:value="${dateTotal}">
-<input style="display: none" id="dataVolume" type="text" th:value="${dataVolume}">
-<input style="display: none" id="dateVolume" type="text" th:value="${dateVolume}">
 <input style="display: none" id="dataLong" type="text" th:value="${dataLong}">
 <input style="display: none" id="dataShort" type="text" th:value="${dataShort}">
 <input style="display: none" id="dateLong" type="text" th:value="${dateLong}">
 <input style="display: none" id="dateShort" type="text" th:value="${dateShort}">
+<input style="display: none" id="dateTotal" type="text" th:value="${dateTotal}">
+<input style="display: none" id="dataTotal" type="text" th:value="${dataTotal}">
 <div class="container">
-    <div class="col-sm-12">
-        <canvas id="trade-stats-total"></canvas>
-    </div>
-    <!--<div class="col-sm-12">
-        <canvas id="trade-stats-volume"></canvas>
-    </div>
-    <div class="col-sm-12">
-        <div id="chart-candlesticks"></div>
-    </div>-->
-    <div class="col-sm-12">
-        <canvas id="trade-stats-long"></canvas>
-    </div>
-    <div class="col-sm-12">
-        <canvas id="trade-stats-short"></canvas>
+    <div class="d-flex">
+        <div class="w-100">
+            <div class="px-lg-4 px-sm-3 px-2 py-lg-5 py-sm-4 py-5">
+                <div class="row">
+                    <div class="col-xxl-12">
+                        <div class="mb-4 gap-4">
+                            <div class="bg-white rounded shadow border w-100">
+                                <div class="bg-secondary p-4">
+                                    <a href="/user/scalp/trades/open" class="d-flex align-items-center text-decoration-none text-body">
+                                        <i class="bx bx-group fs-4 me-2"></i>
+                                        <h2 class="text-center h5 mb-0">Trades</h2>
+                                    </a>
+                                </div>
+                                <div class="d-xl-flex justify-content-between p-3 gap-4">
+                                    <div class="p-3 me-3">
+                                        <p class="text-muted mb-0">Total trades</p>
+                                        <a href="#" class="display-6 text-body text-decoration-none" th:text="${totalTrades}">10</a>
+                                    </div>
+                                    <div class="p-3 bg-light-green">
+                                        <p class="text-muted mb-0">Winning trades</p>
+                                        <a href="#" class="display-6 text-success text-decoration-none" th:text="${winningTrades}">6</a>
+                                    </div>
+                                    <div class="p-3 bg-light-card">
+                                        <p class="text-muted mb-0">Losing trades</p>
+                                        <a href="#" class="display-6 text-muted text-decoration-none" th:text="${losingTrades}">4</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4 gap-4">
+                            <div class="bg-white rounded shadow border w-100">
+                                <div class="bg-secondary p-4 d-flex">
+                                    <a href="/user/scalp/stats" class="d-flex align-items-center text-decoration-none text-body">
+                                        <i class="bx bx-buildings fs-4 me-2"></i>
+                                        <h2 class="text-center h5 mb-0">Quick stats</h2>
+                                    </a>
+                                </div>
+                                <div class="d-xl-flex justify-content-between p-3 gap-4">
+                                    <div class="p-3 me-3">
+                                        <p class="text-muted mb-0">Winrate</p>
+                                        <p class="display-6 text-body text-decoration-none" th:text="${winrate} + '%'">%</p>
+                                    </div>
+                                    <div class="p-3 me-3">
+                                        <p class="text-muted mb-0">ROI</p>
+                                        <p th:if="${roi>0}" class="display-6 text-success text-decoration-none" th:text="${roi} + '%'">%</p>
+                                        <p th:if="${roi<0}" class="display-6 text-danger text-decoration-none" th:text="${roi} + '%'">%</p>
+                                    </div>
+                                    <div class="p-3 bg-light-green">
+                                        <p class="text-muted mb-0">PNL</p>
+                                        <p th:if="${pnl>0}" class="display-6 text-success text-decoration-none" th:text="${pnl} + '$'">$</p>
+                                        <p th:if="${pnl<0}" class="display-6 text-danger text-decoration-none" th:text="${pnl} + '$'">$</p>
+                                        <p th:if="${pnl==0}" class="display-6 text-muted text-decoration-none" th:text="${pnl} + '$'">$</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4 gap-4">
+                            <div class="bg-white rounded shadow border w-100">
+                                <div class="bg-secondary p-4 d-flex">
+                                    <a href="/user/scalp/stats" class="d-flex align-items-center text-decoration-none text-body">
+                                        <i class="bx bx-buildings fs-4 me-2"></i>
+                                        <h2 class="text-center h5 mb-0">Account</h2>
+                                    </a>
+                                </div>
+                                <div class="d-xl-flex justify-content-between p-3 gap-4">
+                                    <div class="p-3 me-3">
+                                        <p class="text-muted mb-0">Leverage</p>
+                                        <p class="display-6 text-body text-decoration-none" th:text="${leverage}">%</p>
+                                    </div>
+                                    <div class="p-3 me-3">
+                                        <p class="text-muted mb-0">Starting balance</p>
+                                        <p class="display-6 text-decoration-none" th:text="${startingBalance} + ' USDT'">%</p>
+                                    </div>
+                                    <div class="p-3 bg-light-green">
+                                        <p class="text-muted mb-0">New balance</p>
+                                        <p class="display-6 text-decoration-none" th:text="${newBalance} + ' USDT'">%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xxl-12">
+                        <div class="row">
+                            <div class="col-xxl-6">
+                                <div class="mb-4 gap-4">
+                                    <div class="bg-white rounded shadow border w-100">
+                                        <div class="bg-secondary p-4 d-flex justify-content-between align-items-center">
+                                            <a href="#" class="d-flex align-items-center text-decoration-none text-body">
+                                                <i class="bx bx-error-circle fs-4 me-2"></i>
+                                                <h2 class="h5 mb-0">Long trades</h2>
+                                            </a>
+                                        </div>
+
+                                        <div>
+                                            <canvas id="trade-stats-long"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xxl-6">
+                                <div class="mb-4 gap-4">
+                                    <div class="bg-white rounded shadow border w-100">
+                                        <div class="bg-secondary p-4 d-flex justify-content-between align-items-center">
+                                            <a href="#" class="d-flex align-items-center text-decoration-none text-body">
+                                                <i class="bx bx-error-circle fs-4 me-2"></i>
+                                                <h2 class="h5 mb-0">Short trades</h2>
+                                            </a>
+                                        </div>
+
+                                        <div>
+                                            <canvas id="trade-stats-short"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xxl-12 order-first order-xxl-last">
+                        <div class="mb-4 gap-4">
+                            <div class="bg-white rounded shadow border w-100">
+                                <div class="bg-secondary p-4 d-flex justify-content-between align-items-center">
+                                    <a href="#" class="d-flex align-items-center text-decoration-none text-body">
+                                        <i class="bx bx-error-circle fs-4 me-2"></i>
+                                        <h2 class="h5 mb-0">Total trades</h2>
+                                    </a>
+                                </div>
+
+                                <div>
+                                    <canvas id="trade-stats-total"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
 <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
 <!-- Scripts -->
 <script src="/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/js/theme.min.js"></script>
 <script src="/js/main.js"></script>
-<script th:inline="javascript">
-    let listOfCandlesticks = []
-    var candlesticks = [[${candlesticks}]];
-    for(let i = 0; i<candlesticks.length;i++){
-        let dataRow = {
-            x: candlesticks[i]['openTime'],
-            y: [candlesticks[i]['open'], candlesticks[i]['high'], candlesticks[i]['low'], candlesticks[i]['close']]
-        }
-        listOfCandlesticks.push(dataRow)
-    }
-    var optionsCandlestick = {
-        series: [{
-                name:"candlesticks",
-                color: "#56e514",
-                type:"candlestick",
-                data: listOfCandlesticks
-            }],
-        chart: {
-            type: 'candlestick',
-            height: 500
-        },
-        title: {
-            text: 'Candlestick data',
-            align: 'left'
-        },
-        xaxis: {
-            type: 'datetime'
-        },
-        yaxis: {
-            tooltip: {
-                enabled: true
-            }
-        },
-    };
-
-    var chartCandlestick = new ApexCharts(document.querySelector("#chart-candlesticks"), optionsCandlestick);
-    chartCandlestick.render();
-</script>
 <script>
-    function returnArrayOfDataTotal(){
-        let input = document.getElementById("dataTotal").value;
-        let array = input.split(",");
-        return array;
-    }
-    function returnArrayOfDataVolume(){
-        let input = document.getElementById("dataVolume").value;
-        let array = input.split(",");
-        return array;
+    function showSpinner(el) {
+        var x = el.getElementsByTagName('span')[0];
+        if (x.style.display === "none") {
+            x.style.display = "";
+        } else {
+            x.style.display = "none";
+        }
     }
     function returnArrayOfDataLong(){
         let input = document.getElementById("dataLong").value;
@@ -117,13 +199,13 @@
         let array = input.split(",");
         return array;
     }
-    function returnArrayOfDateTotal(){
-        let input = document.getElementById("dateTotal").value;
+    function returnArrayOfDataTotal(){
+        let input = document.getElementById("dataTotal").value;
         let array = input.split(",");
         return array;
     }
-    function returnArrayOfDateVolume(){
-        let input = document.getElementById("dateVolume").value;
+    function returnArrayOfDateTotal(){
+        let input = document.getElementById("dateTotal").value;
         let array = input.split(",");
         return array;
     }
@@ -140,7 +222,6 @@
     const ctxTotal = document.getElementById('trade-stats-total');
     const ctxLong = document.getElementById('trade-stats-long');
     const ctxShort = document.getElementById('trade-stats-short');
-    const ctxVolume = document.getElementById('trade-stats-volume');
 
     new Chart(ctxTotal, {
         type: 'line',
@@ -169,26 +250,6 @@
             datasets: [{
                 label: 'Long trades',
                 data: returnArrayOfDataLong(),
-                borderWidth: 1,
-                borderColor: '#36A2EB',
-                backgroundColor: '#9BD0F5',
-            }],
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: false
-                },
-            }
-        }
-    });
-    new Chart(ctxVolume, {
-        type: 'line',
-        data: {
-            labels: returnArrayOfDateVolume(),
-            datasets: [{
-                label: 'Volume',
-                data: returnArrayOfDataVolume(),
                 borderWidth: 1,
                 borderColor: '#36A2EB',
                 backgroundColor: '#9BD0F5',

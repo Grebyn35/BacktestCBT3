@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.io.*;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -38,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 @Controller
 public class UserController {
+    private static final DecimalFormat df2d = new DecimalFormat("0.00");
     @Autowired
     CandlestickRepository candlestickRepository;
     @Autowired
@@ -77,7 +79,7 @@ public class UserController {
     @GetMapping("/backtest-data/{stepBack}/{takeProfit}")
     public String backtestData(@PathVariable int stepBack, @PathVariable double takeProfit, Model model) throws FileNotFoundException, ParseException, InterruptedException {
         removeFakeOrders();
-        strategyTester(stepBack, takeProfit);
+        strategyTester(stepBack, takeProfit, model);
         visualiseDataModel(model);
         return "visualiser";
     }
@@ -223,7 +225,7 @@ public class UserController {
         double ema = candlesticks.get(candlesticks.size()-1).getClose() * multiplier + yesterdayEma * (1-multiplier);
         return ema;
     }
-    public void strategyTester(int stepBack, double takeProfit) throws InterruptedException, FileNotFoundException, ParseException {
+    public Model strategyTester(int stepBack, double takeProfit, Model model) throws InterruptedException, FileNotFoundException, ParseException {
 
         //The daily high and low. Symbolizes liquidity as a primary-key in the strategy
         Candlestick dailyHigh = null;
@@ -260,7 +262,7 @@ public class UserController {
         }
         closeOpenPostions(simulatedCandlesticks.get(simulatedCandlesticks.size()-1));
         //Print the results. Static variables are being used to compare best previous iterations of params
-        returnResults();
+        return returnResults(model);
     }
     public static void closeOpenPostions(Candlestick candlestick) throws InterruptedException {
         ArrayList<FakeOrder> fakeShortOrders = staticFakeOrderRepository.findAllByExitPrice(0);
@@ -381,7 +383,7 @@ public class UserController {
         }
         return 0;
     }
-    public static void returnResults(){
+    public static Model returnResults(Model model){
         User user = staticUserRepository.findAll().get(0);
         double profits = 0;
         double wins = 0;
@@ -422,7 +424,17 @@ public class UserController {
         System.out.println("ROI                : " + ((profits)/user.getEquity())*100 + " %");
         System.out.println("---");
         user.setEquity(user.getAvailableBalance());
+        model.addAttribute("totalTrades", fakeOrders.size());
+        model.addAttribute("winningTrades", (int)wins);
+        model.addAttribute("losingTrades", (int)losses);
+        model.addAttribute("winrate", Double.parseDouble(df2d.format((wins/(wins+losses))*100).replaceAll(",", ".").replaceAll("−", "-")));
+        model.addAttribute("roi",  Double.parseDouble(df2d.format(((profits)/user.getEquity())*100).replaceAll(",", ".").replaceAll("−", "-")));
+        model.addAttribute("pnl", (int)profits);
+        model.addAttribute("leverage", (int)user.getLeverage());
+        model.addAttribute("startingBalance", (int)(user.getEquity()));
+        model.addAttribute("newBalance", (int)(user.getEquity() + (int)profits));
         staticUserRepository.save(user);
+        return model;
     }
     public static void createFakeShort(ArrayList<Candlestick> simulatedCandlesticks, double takeProfit, Candlestick dailyHigh, double atr){
         User user = staticUserRepository.findAll().get(0);
