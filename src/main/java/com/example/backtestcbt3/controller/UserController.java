@@ -423,7 +423,6 @@ public class UserController {
         System.out.println("wirate             : " + (wins/(wins+losses))*100 + " %");
         System.out.println("ROI                : " + ((profits)/user.getEquity())*100 + " %");
         System.out.println("---");
-        user.setEquity(user.getAvailableBalance());
         model.addAttribute("totalTrades", fakeOrders.size());
         model.addAttribute("winningTrades", (int)wins);
         model.addAttribute("losingTrades", (int)losses);
@@ -433,6 +432,7 @@ public class UserController {
         model.addAttribute("leverage", (int)user.getLeverage());
         model.addAttribute("startingBalance", (int)(user.getEquity()));
         model.addAttribute("newBalance", (int)(user.getEquity() + (int)profits));
+        user.setEquity(user.getAvailableBalance());
         staticUserRepository.save(user);
         return model;
     }
